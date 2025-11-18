@@ -42,11 +42,13 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
             "locate" -> handleLocate(sender, args)
             "shrine" -> handleShrine(sender, args)
             "butcher" -> handleButcher(sender, args)
+            "boss" -> handleBoss(sender, args)
             "reload" -> handleReload(sender)
             "debug" -> handleDebug(sender, args)
             "sb" , "scoreboard" -> handleScoreboard(sender, args)
             "skills" -> handleSkills(sender)
             "achievements" -> handleAchievements(sender)
+            "trade" -> handleTrade(sender, args)
             else -> sendHelp(sender)
         }
 
@@ -886,6 +888,67 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
         }
     }
 
+    private fun handleBoss(sender: CommandSender, args: Array<out String>) {
+        if (!sender.hasPermission("survivalplus.boss")) {
+            sender.sendMessage(Component.text("Keine Berechtigung!")
+                .color(NamedTextColor.RED))
+            return
+        }
+
+        if (sender !is Player) {
+            sender.sendMessage(Component.text("Nur Spieler können diesen Befehl nutzen!")
+                .color(NamedTextColor.RED))
+            return
+        }
+
+        // /sp boss spawn <harvester|frosttitan> [tier]
+        if (args.size < 3) {
+            sender.sendMessage(Component.text("Verwendung: /sp boss spawn <harvester|frosttitan> [tier]")
+                .color(NamedTextColor.RED))
+            sender.sendMessage(Component.text("Verfügbare Bosse: harvester, frosttitan")
+                .color(NamedTextColor.GRAY))
+            return
+        }
+
+        when (args[1].lowercase()) {
+            "spawn" -> {
+                val bossType = args[2].lowercase()
+                val worldTier = if (args.size >= 4) {
+                    args[3].toIntOrNull()?.coerceIn(1, 5) ?: plugin.worldTierManager.getWorldTier(sender.world).tier
+                } else {
+                    plugin.worldTierManager.getWorldTier(sender.world).tier
+                }
+
+                val location = sender.location
+
+                when (bossType) {
+                    "harvester" -> {
+                        plugin.harvesterBoss.spawn(location, worldTier)
+                        sender.sendMessage(Component.text("✓ Der Ernter wurde gespawnt! (Tier $worldTier)")
+                            .color(NamedTextColor.GREEN))
+                        sender.playSound(sender.location, org.bukkit.Sound.ENTITY_WITHER_SPAWN, 0.5f, 0.7f)
+                    }
+                    "frosttitan" -> {
+                        plugin.frostTitanBoss.spawn(location, worldTier)
+                        sender.sendMessage(Component.text("✓ Der Frost-Titan wurde gespawnt! (Tier $worldTier)")
+                            .color(NamedTextColor.GREEN))
+                        sender.playSound(sender.location, org.bukkit.Sound.BLOCK_BEACON_ACTIVATE, 0.5f, 1.5f)
+                    }
+                    else -> {
+                        sender.sendMessage(Component.text("Unbekannter Boss-Typ!")
+                            .color(NamedTextColor.RED))
+                        sender.sendMessage(Component.text("Verfügbare Bosse: harvester, frosttitan")
+                            .color(NamedTextColor.GRAY))
+                    }
+                }
+            }
+            else -> {
+                sender.sendMessage(Component.text("Unbekannter Befehl! Nutze: spawn")
+                    .color(NamedTextColor.RED))
+            }
+        }
+    }
+
     private fun handleReload(sender: CommandSender) {
         if (!sender.hasPermission("survivalplus.reload")) {
             sender.sendMessage(Component.text("Keine Berechtigung!")
@@ -1006,6 +1069,8 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
             .color(NamedTextColor.YELLOW))
         sender.sendMessage(Component.text("/sp butcher spawn [tier] - Spawnt den Butcher Boss")
             .color(NamedTextColor.YELLOW))
+        sender.sendMessage(Component.text("/sp boss spawn <harvester|frosttitan> [tier] - Spawnt neue Bosse")
+            .color(NamedTextColor.YELLOW))
         sender.sendMessage(Component.text("/sp reload - Lädt die Config neu")
             .color(NamedTextColor.YELLOW))
         sender.sendMessage(Component.text("/sp debug [memory|clear] - Debug-Informationen")
@@ -1013,6 +1078,7 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
         sender.sendMessage(Component.text("/sp sb toggle - Aktiviert/Deaktiviert das Scoreboard").color(NamedTextColor.YELLOW))
         sender.sendMessage(Component.text("/sp skills - Öffne deine Skills").color(NamedTextColor.YELLOW))
         sender.sendMessage(Component.text("/sp achievements - Zeige deine Erfolge").color(NamedTextColor.YELLOW))
+        sender.sendMessage(Component.text("/sp trade <spieler> - Starte einen Handel").color(NamedTextColor.YELLOW))
     }
 
     /**
@@ -1041,6 +1107,46 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
         sender.playSound(sender.location, org.bukkit.Sound.UI_BUTTON_CLICK, 1f, 1f)
     }
 
+    /**
+     * Handelt Trade-Commands
+     */
+    private fun handleTrade(sender: CommandSender, args: Array<out String>) {
+        if (sender !is Player) {
+            sender.sendMessage(Component.text("Dieser Command ist nur für Spieler!").color(NamedTextColor.RED))
+            return
+        }
+
+        // /sp trade <player> - Trade-Request senden
+        // /sp trade accept - Trade-Request akzeptieren
+        // /sp trade deny - Trade-Request ablehnen
+
+        if (args.size < 2) {
+            sender.sendMessage(Component.text("Verwendung: /sp trade <spieler|accept|deny>")
+                .color(NamedTextColor.RED))
+            return
+        }
+
+        when (args[1].lowercase()) {
+            "accept" -> {
+                plugin.tradeManager.acceptTradeRequest(sender)
+            }
+            "deny" -> {
+                plugin.tradeManager.denyTradeRequest(sender)
+            }
+            else -> {
+                // Trade-Request senden
+                val targetPlayer = Bukkit.getPlayer(args[1])
+                if (targetPlayer == null) {
+                    sender.sendMessage(Component.text("Spieler nicht gefunden!")
+                        .color(NamedTextColor.RED))
+                    return
+                }
+
+                plugin.tradeManager.sendTradeRequest(sender, targetPlayer)
+            }
+        }
+    }
+
     override fun onTabComplete(
         sender: CommandSender,
         command: Command,
@@ -1048,7 +1154,7 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
         args: Array<out String>
     ): List<String> {
         return when (args.size) {
-            1 -> listOf("give", "giveblock", "givebook", "enchant", "kit", "reforge", "craft", "info", "worldtier", "startevent", "locate", "shrine", "butcher", "sb", "reload", "debug", "skills", "achievements")
+            1 -> listOf("give", "giveblock", "givebook", "enchant", "kit", "reforge", "craft", "info", "worldtier", "startevent", "locate", "shrine", "butcher", "boss", "sb", "reload", "debug", "skills", "achievements", "trade")
                 .filter { it.startsWith(args[0].lowercase()) }
             2 -> when (args[0].lowercase()) {
                 "give", "giveblock", "givebook" -> Bukkit.getOnlinePlayers().map { it.name }
@@ -1058,7 +1164,9 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
                 "shrine" -> listOf("generate", "list", "info")
                 "debug" -> listOf("memory", "cache", "clear")
                 "butcher" -> listOf("spawn")
+                "boss" -> listOf("spawn")
                 "sb" -> listOf("toggle")
+                "trade" -> listOf("accept", "deny") + Bukkit.getOnlinePlayers().map { it.name }
                 else -> emptyList()
             }
             3 -> when (args[0].lowercase()) {
@@ -1067,10 +1175,12 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
                 "givebook" -> org.bysenom.survivalPlus.enchantments.CustomEnchantment.entries.map { it.name.lowercase() }
                 "worldtier" -> if (args[1].lowercase() == "set") listOf("1", "2", "3", "4", "5") else emptyList()
                 "butcher" -> if (args[1].lowercase() == "spawn") listOf("2", "3", "4", "5") else emptyList()
+                "boss" -> if (args[1].lowercase() == "spawn") listOf("harvester", "frosttitan") else emptyList()
                 else -> emptyList()
             }
             4 -> when (args[0].lowercase()) {
                 "give" -> Quality.entries.map { it.name.lowercase() }
+                "boss" -> if (args[1].lowercase() == "spawn") listOf("1", "2", "3", "4", "5") else emptyList()
                 else -> emptyList()
             }
             else -> emptyList()

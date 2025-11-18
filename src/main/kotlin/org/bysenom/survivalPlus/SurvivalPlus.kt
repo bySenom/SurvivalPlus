@@ -92,6 +92,12 @@ class SurvivalPlus : JavaPlugin() {
     lateinit var butcherBoss: org.bysenom.survivalPlus.mobs.ButcherBoss
         private set
 
+    lateinit var harvesterBoss: org.bysenom.survivalPlus.mobs.HarvesterBoss
+        private set
+
+    lateinit var frostTitanBoss: org.bysenom.survivalPlus.mobs.FrostTitanBoss
+        private set
+
     lateinit var worldEventManager: WorldEventManager
         private set
 
@@ -113,6 +119,12 @@ class SurvivalPlus : JavaPlugin() {
         private set
 
     lateinit var achievementsGUI: org.bysenom.survivalPlus.gui.AchievementsGUI
+        private set
+
+    lateinit var tradeManager: org.bysenom.survivalPlus.trading.TradeManager
+        private set
+
+    lateinit var tradingGUI: org.bysenom.survivalPlus.trading.TradingGUI
         private set
 
     override fun onEnable() {
@@ -147,6 +159,8 @@ class SurvivalPlus : JavaPlugin() {
         worldTierGUI = org.bysenom.survivalPlus.worldtier.WorldTierGUI(this)
         specialMobManager = SpecialMobManager(this)
         butcherBoss = org.bysenom.survivalPlus.mobs.ButcherBoss(this)
+        harvesterBoss = org.bysenom.survivalPlus.mobs.HarvesterBoss(this)
+        frostTitanBoss = org.bysenom.survivalPlus.mobs.FrostTitanBoss(this)
         worldEventManager = WorldEventManager(this)
         shrineManager = org.bysenom.survivalPlus.structures.ShrineManager(this)
         scoreboardManager = org.bysenom.survivalPlus.scoreboard.ScoreboardManager(this)
@@ -154,6 +168,8 @@ class SurvivalPlus : JavaPlugin() {
         achievementManager = org.bysenom.survivalPlus.achievements.AchievementManager(this)
         skillsGUI = org.bysenom.survivalPlus.gui.SkillsGUI(this)
         achievementsGUI = org.bysenom.survivalPlus.gui.AchievementsGUI(this)
+        tradeManager = org.bysenom.survivalPlus.trading.TradeManager(this)
+        tradingGUI = org.bysenom.survivalPlus.trading.TradingGUI(this)
 
         // Commands registrieren
         val command = getCommand("survivalplus")
@@ -187,6 +203,8 @@ class SurvivalPlus : JavaPlugin() {
         server.pluginManager.registerEvents(org.bysenom.survivalPlus.achievements.AchievementListener(this), this)
         server.pluginManager.registerEvents(skillsGUI, this)
         server.pluginManager.registerEvents(achievementsGUI, this)
+        server.pluginManager.registerEvents(tradingGUI, this)
+        server.pluginManager.registerEvents(org.bysenom.survivalPlus.trading.TradingListener(this), this)
 
         // Rezepte registrieren
         customBlockRecipes.registerRecipes()
@@ -281,6 +299,14 @@ class SurvivalPlus : JavaPlugin() {
             butcherBoss.cleanup()
         }
 
+        if (::harvesterBoss.isInitialized) {
+            harvesterBoss.cleanup()
+        }
+
+        if (::frostTitanBoss.isInitialized) {
+            frostTitanBoss.cleanup()
+        }
+
         if (::worldEventManager.isInitialized) {
             worldEventManager.stop()
         }
@@ -291,6 +317,11 @@ class SurvivalPlus : JavaPlugin() {
 
         // Shrine Proximity Task stoppen
         shrineProximityTask?.cleanup()
+
+        // Trades abbrechen
+        if (::tradeManager.isInitialized) {
+            tradeManager.shutdown()
+        }
 
         // Speichere alle Spieler-Daten
         if (::skillDataManager.isInitialized) {
