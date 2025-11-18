@@ -1,350 +1,228 @@
-# 🎉 SurvivalPlus v1.2.0 - Release Notes (Preview)
+# SurvivalPlus v1.2.0 Release Notes
 
-> **Release-Datum:** TBD (Nach Stats/Skills/Achievements)  
-> **Build-Status:** ✅ Erfolgreich  
-> **Kritische Fixes:** ✅ Alle behoben (2025-11-18)
-
----
-
-## 🚀 Highlights dieser Version
-
-### ⭐ Kritische Verbesserungen
-1. **Mining Speed funktioniert jetzt korrekt!**
-   - Haste I-V basierend auf Item-Qualität
-   - Legendary/Mythic: Instamine-Chance
-   - Endlich echte Geschwindigkeitserhöhung!
-
-2. **Alle Vanilla-Materialien unterstützt!**
-   - Wood, Stone, Iron, Gold, **Copper** ⭐, Diamond, Netherite
-   - Leather, Chainmail, **Turtle Shell** ⭐
-   - Vollständige Stats für alle Typen
-
-3. **Enchantment Balance für Multiplayer!**
-   - Cooldown-System für starke Enchantments
-   - Vein Miner: 32 Blöcke (statt 64)
-   - Timber: 64 Blöcke (statt 128)
-   - Explosive: 5s Cooldown, reduzierte Power
-   - Thunder Strike: 8s Cooldown
-
----
-
-## 🆕 Neue Features
-
-### Mining Speed System ⭐
-- **Quality-basierte Geschwindigkeit:**
-  - Common: Normal
-  - Uncommon: +20%
-  - Rare: +40%
-  - Epic: +60%
-  - Legendary: +80% + 10% Instamine
-  - Mythic: +100% + 20% Instamine
-
-- **Visual Feedback:**
-  - Permanenter Haste-Effekt während Tool in Hand
-  - Debug-Mode zeigt Mining Speed Bonus
-  - Partikel & Sound bei Instamine
-
-### Copper Material Support ⭐
-- Neuer Material-Typ zwischen Stein und Eisen
-- Vollständige Stats für:
-  - Copper Sword, Axe, Pickaxe, Shovel, Hoe
-  - Copper Helmet, Chestplate, Leggings, Boots
-- Balance: Besser als Stein, schlechter als Eisen
-
-### Turtle Shell Support ⭐
-- Turtle Helmet wird erkannt
-- Stats: Iron-Level Rüstung
-- Härte: 0.5 (hat etwas Toughness)
-
-### Enchantment Cooldown System ⭐
-- Spieler-basiertes Cooldown-Tracking
-- Visual Feedback via ActionBar
-- Konfigurierbar in config.yml
-- Verhindert Spam und Lag
-
-### Neue Config-Optionen ⭐
-```yaml
-enchantment-balance:
-  vein-miner-max-blocks: 32
-  timber-max-blocks: 64
-  explosive-cooldown: 5
-  explosive-power-multiplier: 0.5
-  thunder-strike-cooldown: 8
-```
-
----
-
-## 🔧 Verbesserungen
-
-### Performance
-- ✅ Vein Miner optimiert (32 statt 64 Blöcke)
-- ✅ Timber optimiert (64 statt 128 Blöcke)
-- ✅ Cooldown-System minimaler Overhead
-- ✅ Mining Speed nutzt Vanilla Haste
-
-### Balance
-- ✅ Explosive Power reduziert (1.0 + 0.5*Level)
-- ✅ Explosive/Thunder Strike haben Cooldowns
-- ✅ Material-Balance für alle Typen
-- ✅ Alle Werte konfigurierbar
-
-### Code-Qualität
-- ✅ Deprecation-Warning in SurvivalPlus.kt behoben
-- ✅ Ungenutzte Imports entfernt
-- ✅ Sauberer Code
-- ✅ Bessere Kommentare
-
----
-
-## 🐛 Behobene Bugs
-
-### Kritisch
-1. ✅ **Mining Speed funktionierte nicht**
-   - Problem: Nur visuelle Animation, keine echte Geschwindigkeit
-   - Fix: Haste-Effekt System implementiert
-   - Status: Vollständig behoben!
-
-2. ✅ **Fehlende Materialtypen**
-   - Problem: Nur Diamond/Netherite unterstützt
-   - Fix: Alle Vanilla-Materialien hinzugefügt
-   - Status: Vollständig behoben!
-
-3. ✅ **Unbalancierte Enchantments**
-   - Problem: Zu stark, Performance-Issues, kein Cooldown
-   - Fix: Balance-Anpassungen, Cooldown-System
-   - Status: Vollständig behoben!
-
----
-
-## 📊 Technische Details
-
-### Geänderte Dateien
-- `MiningSpeedListener.kt` - Komplett überarbeitet
-- `ItemManager.kt` - Copper & Turtle Material hinzugefügt
-- `EnchantmentListener.kt` - Cooldown-System implementiert
-- `config.yml` - Neue Balance-Sektion
-- `SurvivalPlus.kt` - Deprecation-Warning behoben
-
-### Build-Informationen
-- **Compiler:** Kotlin 1.9+
-- **Build-Zeit:** ~1 Sekunde
-- **JAR-Größe:** ~1.5 MB
-- **Kompilierfehler:** 0
-- **Warnungen:** 2 (nicht kritisch)
-
-### Kompatibilität
-- **Minecraft:** 1.21+
-- **Paper:** 1.21+ (empfohlen)
-- **Spigot:** Sollte funktionieren
-- **Java:** 17+
-
----
-
-## 🎮 Gameplay-Änderungen
-
-### Mining
-- **Mythic Pickaxe:** Jetzt 2x schneller als Vanilla!
-- **Legendary Pickaxe:** 80% schneller + Instamine-Chance
-- **Alle Qualitäten:** Spürbare Geschwindigkeitsdifferenz
-
-### Combat
-- **Explosive:** Max 2x pro 10 Sekunden
-- **Thunder Strike:** Max 1x pro 8 Sekunden
-- **Balance:** Kein Spam mehr, aber immer noch stark
-
-### Resources
-- **Vein Miner:** Max 32 Erze auf einmal
-- **Timber:** Max 64 Logs auf einmal
-- **Performance:** Deutlich besser auf Servern
-
----
-
-## ⚙️ Konfiguration
-
-### Empfohlene Settings (PvP-Server)
-```yaml
-enchantment-balance:
-  vein-miner-max-blocks: 24        # Weniger für mehr Balance
-  timber-max-blocks: 48
-  explosive-cooldown: 8            # Längerer Cooldown
-  explosive-power-multiplier: 0.3  # Weniger Schaden
-  thunder-strike-cooldown: 12
-```
-
-### Empfohlene Settings (PvE-Server)
-```yaml
-enchantment-balance:
-  vein-miner-max-blocks: 48        # Mehr für mehr Spaß
-  timber-max-blocks: 96
-  explosive-cooldown: 3            # Kürzerer Cooldown
-  explosive-power-multiplier: 0.7  # Mehr Schaden
-  thunder-strike-cooldown: 5
-```
-
-### Empfohlene Settings (Performance-Server)
-```yaml
-enchantment-balance:
-  vein-miner-max-blocks: 16        # Minimal für beste Performance
-  timber-max-blocks: 32
-  explosive-cooldown: 10
-  explosive-power-multiplier: 0.4
-  thunder-strike-cooldown: 15
-```
-
----
-
-## 📚 Dokumentation
-
-### Neue Dokumente
-- `CRITICAL_FIXES_COMPLETE.md` - Detaillierter Fix-Bericht
-- `ANALYSIS_REPORT.md` - Vollständige Projekt-Analyse
-- Aktualisierte `TODO.md`
-
-### Wiki-Updates
-- Mining Speed System erklärt
-- Material-Typen-Übersicht
-- Enchantment-Balance-Guide
-
----
-
-## 🧪 Testing
-
-### Was getestet wurde
-- ✅ Mining Speed mit allen Qualitäten
-- ✅ Custom Items mit allen Materialien
-- ✅ Vein Miner mit großen Erzadern
-- ✅ Timber mit großen Bäumen
-- ✅ Explosive Cooldown
-- ✅ Thunder Strike Cooldown
-- ✅ Build & Deployment
-
-### Was getestet werden sollte
-- [ ] Multiplayer-Performance (10+ Spieler)
-- [ ] PvP mit neuen Enchantment-Cooldowns
-- [ ] TPS während Vein Miner/Timber
-- [ ] Server-Restart Persistenz
-
----
-
-## 🎯 Bekannte Probleme
-
-### Minor (nicht kritisch)
-- ⚠️ 2x Deprecation-Warnungen in EnchantmentListener
-  - Betrifft: `maxHealth` property
-  - Impact: Keine (funktioniert trotzdem)
-  - Fix: Geplant für v1.3.0
-
-### Features in Arbeit
-- 🔄 Extended Stats Integration (50%)
-- 🔄 Skill System XP (60%)
-- ❌ Achievement System (0%)
-
----
-
-## 🚀 Nächste Version (v1.3.0)
-
-### Geplante Features
-1. **Extended Stats vollständig**
-   - Crit-System aktiviert
-   - Lifesteal aus Stats
-   - Luck-Stat für Drops
-
-2. **Skill System XP**
-   - XP-Vergabe
-   - Level-Mechanik
-   - Rewards
-
-3. **Achievement System**
-   - 15+ Achievements
-   - Belohnungen
-   - GUI
-
----
-
-## 💬 Danke an
-
-- **Tester:** Community (bitte testen!)
-- **Entwicklung:** GitHub Copilot
-- **Inspiration:** Tierify Mod, Diablo Serie
-- **Engine:** Paper/Spigot Team
-
----
-
-## 📝 Changelog (Vollständig)
-
-### Added ✨
-- Mining Speed System mit Haste I-V
-- Instamine-Chance für Legendary/Mythic
-- Copper Material Support (Tools + Armor)
-- Turtle Shell Helmet Support
-- Enchantment Cooldown System
-- Visual Feedback für Enchantments
-- Config-Sektion für Balance
-- Debug-Mode für Mining Speed
-
-### Changed 🔧
-- Vein Miner: 64 → 32 Blöcke (default)
-- Timber: 128 → 64 Blöcke (default)
-- Explosive: Reduzierte Power, 5s Cooldown
-- Thunder Strike: 8s Cooldown
-- Alle Balance-Werte konfigurierbar
-
-### Fixed 🐛
-- Mining Speed funktionierte nicht (kritisch!)
-- Fehlende Materialtypen (kritisch!)
-- Unbalancierte Enchantments (kritisch!)
-- Deprecation-Warning in SurvivalPlus.kt
-- Ungenutzte Imports in MiningSpeedListener
-
-### Performance ⚡
-- Vein Miner optimiert
-- Timber optimiert
-- Cooldown-System minimaler Overhead
-
----
-
-## 📊 Statistik
-
-### Code-Änderungen
-- **Dateien geändert:** 5
-- **Zeilen hinzugefügt:** ~200
-- **Zeilen entfernt:** ~100
-- **Neue Features:** 8
-- **Behobene Bugs:** 3 (kritisch)
-
-### Projekt-Metriken
-- **Gesamt-Dateien:** 57 Kotlin-Dateien
-- **Features:** 30+ implementiert
-- **Qualitäten:** 6 (Common bis Mythic)
-- **Enchantments:** 12 funktional
-- **Armor Sets:** 6 mit Boni
-- **World Tiers:** 5 Stufen
-- **Special Mobs:** 7 Affixe
-- **World Events:** 5 Events
-
----
-
-## ⭐ Qualitätsbewertung
-
-### Version 1.1.0 (vorher)
-- Qualität: ⭐⭐⭐⭐☆ (4/5)
-- Mining Speed: ❌ Funktioniert nicht
-- Materialien: ⚠️ Nur 2 Typen
-- Balance: ⚠️ Unbalanciert
-
-### Version 1.2.0 (jetzt)
-- Qualität: ⭐⭐⭐⭐⭐ (5/5)
-- Mining Speed: ✅ Perfekt
-- Materialien: ✅ Alle Vanilla-Typen
-- Balance: ✅ Multiplayer-ready
-
----
-
-**Release-Status:** 🚀 Production-Ready  
-**Build:** ✅ Erfolgreich  
-**Empfehlung:** JA, für alle Server-Typen!
-
-**Erstellt:** 2025-11-18  
+**Release-Datum:** November 18, 2025  
 **Version:** 1.2.0-SNAPSHOT  
-**Build:** #final
+**Minecraft-Version:** Paper 1.21+
 
+## 🚀 Major Features
+
+### 🤝 Trading-System (Player-to-Player)
+Ein komplett neues Handelssystem zwischen Spielern mit:
+- **Trade-GUI**: 4x4 Item-Slots pro Spieler (16 Slots total)
+- **Request-System**: `/sp trade <spieler>` sendet Anfrage mit 30s Timeout
+- **Scam-Schutz**: Beide Spieler müssen bestätigen, Änderungen reseten Bestätigung
+- **Safety Features**:
+  - 5 Sekunden Cooldown zwischen Trades
+  - Automatischer Item-Return bei Disconnect
+  - Trade-Logging für Admin-Übersicht
+- **Benutzerfreundlich**:
+  - Live-Updates für beide Spieler
+  - Status-Anzeige (Confirmed/Unconfirmed)
+  - Separator für klare Übersicht
+
+### ⚔️ Boss #1: Der Ernter (The Harvester)
+Nether-Boss mit 4 Phasen und Feuer-Mechaniken:
+
+**Stats:**
+- Base HP: 500 (skaliert mit World Tier)
+- Base Damage: 15 (skaliert mit World Tier)
+- Spawn: Nether (manuell via Command)
+- Model: Wither Skeleton mit Netherite-Rüstung
+
+**Phasen:**
+1. **Phase 1 (100-75% HP)**: Blaze Summons (2 Blazes alle 10s)
+2. **Phase 2 (75-50% HP)**: Fire Waves (expandierende Feuerringe alle 15s) + Speed I
+3. **Phase 3 (50-25% HP)**: Lava Pools (Lava-Zonen unter Spielern alle 12.5s) + Strength I
+4. **Phase 4 (25-0% HP)**: Berserk Mode (5 Blazes, Speed II, Strength II, Resistance I)
+
+**Abilities:**
+- **Fire Wave**: Expandierende Feuerringe (2-15 Blöcke Radius), 5 Damage/Tier + Fire
+- **Lava Pool**: Temporäre Lava-Zonen, 10 Damage/Tier + 100 Fire Ticks
+- **Blaze Summon**: 2-5 Blazes je nach Phase (15 HP/Tier)
+
+**Loot:**
+- 2-5x Netherite Scrap
+- 5-10x Blaze Rod
+- 10-20x Magma Cream
+- 5-15x Fire Charge
+- 2-5x Custom Items (Rare/Epic/Legendary, skaliert mit Tier)
+- 1-5x Enchanted Books (Epic/Legendary)
+
+### ❄️ Boss #2: Frost-Titan
+Ice Peaks Boss mit 4 Phasen und Freeze-Mechaniken:
+
+**Stats:**
+- Base HP: 600 (skaliert mit World Tier)
+- Base Damage: 12 (skaliert mit World Tier)
+- Spawn: Beliebige Welt (manuell via Command)
+- Model: Iron Golem mit Ice-Particles
+
+**Phasen:**
+1. **Phase 1 (100-75% HP)**: Ice Spike Summons (3 Spikes alle 7.5s)
+2. **Phase 2 (75-50% HP)**: Frost Aura (10 Blöcke Radius, Slow-Effekt) + Speed
+3. **Phase 3 (50-25% HP)**: Blizzard (15 Blöcke Radius, 10s Dauer) + Resistance II
+4. **Phase 4 (25-0% HP)**: Absolute Zero (Instant Freeze, Speed I, Resistance III)
+
+**Abilities:**
+- **Ice Spike**: 3-8 Eis-Spikes unter Spielern, 8 Damage/Tier + Slow II + Mining Fatigue I
+- **Frost Aura**: Distanz-basierter Slow-Effekt (näher = stärker), 2 Damage/Tier in Phase 3+
+- **Blizzard**: 10 Sekunden Schneesturm, 3 Damage/Tier + Slow III + Blindness
+- **Freeze**: 3 Sekunden komplette Bewegungsunfähigkeit (Slow X + Jump Boost 250 + Mining Fatigue X)
+
+**Loot:**
+- 3-8x Diamond
+- 10-20x Packed Ice
+- 5-15x Blue Ice
+- 20-40x Snowball
+- 2-5x Custom Items (Rare/Epic/Legendary, skaliert mit Tier)
+- 1-5x Enchanted Books (Epic/Legendary)
+
+## 📝 Commands
+
+### Trading
+```
+/sp trade <spieler>     - Sendet Trade-Anfrage
+/sp trade accept        - Akzeptiert Trade-Anfrage
+/sp trade deny          - Lehnt Trade-Anfrage ab
+```
+
+### Boss-Spawning
+```
+/sp boss spawn harvester [tier]     - Spawnt Den Ernter (Nether-Boss)
+/sp boss spawn frosttitan [tier]    - Spawnt Frost-Titan (Ice-Boss)
+```
+
+**Tab-Completion:**
+- `/sp trade <TAB>` → `accept`, `deny`, `<online players>`
+- `/sp boss spawn <TAB>` → `harvester`, `frosttitan`
+- `/sp boss spawn harvester <TAB>` → `1`, `2`, `3`, `4`, `5`
+
+## 🔧 Technical Details
+
+### Neue Dateien
+**Trading-System:**
+- `trading/TradeManager.kt` (283 Zeilen) - Core Trade-Logik
+- `trading/Trade.kt` (165 Zeilen) - Trade-Daten-Klasse
+- `trading/TradingGUI.kt` (288 Zeilen) - GUI & Listener
+- `trading/TradingListener.kt` (16 Zeilen) - Disconnect-Handling
+
+**Bosse:**
+- `mobs/HarvesterBoss.kt` (566 Zeilen) - Harvester Boss mit 4-Phasen AI
+- `mobs/FrostTitanBoss.kt` (581 Zeilen) - Frost Titan mit Freeze-System
+
+### Modifizierte Dateien
+- `SurvivalPlus.kt`: TradeManager, HarvesterBoss, FrostTitanBoss initialisiert
+- `commands/SurvivalPlusCommand.kt`: `/sp trade` und `/sp boss` Commands
+- `build.gradle.kts`: Version → 1.2.0-SNAPSHOT
+
+### Architektur-Highlights
+
+**Trading-System:**
+- **Thread-Safe**: ConcurrentHashMap für Trade-Storage
+- **Request-Timeout**: Automatisches Cleanup nach 30s
+- **Item-Safety**: Items werden in Trade-Objekt kopiert
+- **GUI-Sync**: Live-Updates für beide Spieler gleichzeitig
+- **Layout**: 6 Reihen (4x4 Player, 4x4 Partner, Mitte = Controls)
+
+**Boss-Systeme:**
+- **Phase-Management**: HP-basierte Phase-Transitions mit Events
+- **Boss-Bar**: Live-Updates mit Phase-Anzeige und Farbwechsel
+- **AI-Loop**: 1 Sekunde Tick-Rate für Ability-Execution
+- **Cleanup**: Automatisches Cleanup bei Boss-Death oder Server-Stop
+- **Particle-Effects**: Phase-spezifische Particle-Systeme
+- **Loot-Scaling**: World-Tier-basierte Loot-Quality
+
+**Performance:**
+- Harvester Fire Wave: Async Particle-Spawning
+- Frost Titan Blizzard: 10s Task mit 1-Tick-Rate
+- Boss-Bars: Range-Check (50 Blöcke) für Player-Updates
+- Cooldown-System: Timestamp-basiert (keine Scheduler-Tasks)
+
+## 🎮 Gameplay-Balance
+
+### Trading
+- **Cooldown**: 5 Sekunden zwischen Trades verhindert Spam
+- **Timeout**: 30 Sekunden Request-Timeout verhindert AFK-Requests
+- **Inventory-Full**: Items werden gedroppt wenn Inventory voll
+
+### Harvester
+- **Nether-Boss**: Passt perfekt ins Nether-Theme
+- **Schwierigkeit**: Hoher Damage, aber ausweichbare Attacks
+- **Loot**: Nether-Items + Custom Gear (Netherite-Focus)
+
+### Frost Titan
+- **Ice-Boss**: Freeze-Mechaniken einzigartig
+- **Schwierigkeit**: Höhere HP, aber weniger Damage als Harvester
+- **Loot**: Ice-Items + Custom Gear (Diamond-Focus)
+
+## 📊 Statistics
+
+**Code-Umfang v1.2.0:**
+- **Neue Zeilen**: 2053 insertions
+- **Neue Dateien**: 6 Dateien
+- **Geänderte Dateien**: 3 Dateien
+- **Build-Zeit**: 11 Sekunden
+- **Warnings**: 12 (Deprecation-Warnings, nicht kritisch)
+
+**Feature-Komplexität:**
+- Trading-System: ~750 Zeilen
+- Harvester Boss: ~570 Zeilen
+- Frost Titan Boss: ~580 Zeilen
+- Commands & Integration: ~150 Zeilen
+
+## 🔄 Migration von v1.1.0
+
+**Keine Breaking Changes!**
+- Alle v1.1.0 Features funktionieren weiterhin
+- Neue Commands sind optional
+- Bosse spawnen nur via Command (kein Auto-Spawn)
+- Trading benötigt keine Config-Änderungen
+
+## 🐛 Known Issues
+
+1. **GitHub Push**: Commit erfolgreich, aber Push-Error (GitHub Server 500)
+   - **Status**: Commit lokal gespeichert (1e4aa82)
+   - **Workaround**: Retry push später
+
+2. **Boss-Bar Distance**: Boss-Bar verschwindet bei >50 Blöcken
+   - **Status**: Working as intended (Performance)
+   - **Workaround**: Näher am Boss bleiben
+
+3. **Freeze-Effekt**: Jump Boost 250 = kein Springen, aber Client-Side-Flicker möglich
+   - **Status**: Minecraft-Engine Limitation
+   - **Impact**: Minimal, Effekt funktioniert
+
+## 🎯 Next Steps (v1.3.0)
+
+Mögliche Features für v1.3.0:
+- **Boss-Summon Items**: Crafting-Rezepte für Boss-Spawn (kein Command nötig)
+- **Boss-Cooldowns**: Globale Spawn-Cooldowns pro Boss-Typ
+- **Trade-History**: Log-System für Admin-Übersicht
+- **Boss-Leaderboards**: Scoreboard für schnellste Boss-Kills
+- **Custom Boss-Drops**: Einzigartige Set-Items pro Boss
+
+## ⚠️ Developer Notes
+
+**Particle-Änderungen:**
+- `Particle.EXPLOSION_HUGE` → `Particle.EXPLOSION_EMITTER` (Paper 1.21+)
+- `Particle.FALLING_SNOW` → `Particle.FALLING_DUST` + BlockData (Paper 1.21+)
+- `Particle.BLOCK_CRACK` → `Particle.BLOCK` (Paper 1.21+)
+
+**Attribute-API:**
+- `Attribute.GENERIC_MAX_HEALTH` → `Attribute.MAX_HEALTH` (Bukkit API)
+- `Attribute.GENERIC_ATTACK_DAMAGE` → `Attribute.ATTACK_DAMAGE`
+- Alle `GENERIC_*` Prefixe entfernt
+
+**Event-API:**
+- `event.cursor` ist val → Verwende `player.setItemOnCursor()` statt direkter Zuweisung
+
+## 🏆 Credits
+
+- **Trading-System**: Inspiriert von Hypixel SkyBlock Trading
+- **Harvester Boss**: Diablo 4 Fire-Mechaniken
+- **Frost Titan**: Inspired by Dark Souls Frost-Builds
+- **Boss-Phases**: Terraria Calamity Mod Boss-Design
+
+---
+
+**Viel Spaß mit v1.2.0! 🎮**
