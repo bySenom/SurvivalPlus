@@ -65,7 +65,7 @@ class FrostTitanBoss(private val plugin: SurvivalPlus) {
         
         // Setup Boss
         setupBossEntity(boss, worldTier)
-        setupBossBar(boss, worldTier)
+        val bossBar = setupBossBar(boss, worldTier)
         
         // Boss Data
         val data = BossData(
@@ -75,7 +75,8 @@ class FrostTitanBoss(private val plugin: SurvivalPlus) {
             spawnLocation = location,
             lastIceSpike = 0L,
             lastFrostAura = 0L,
-            lastBlizzard = 0L
+            lastBlizzard = 0L,
+            bossBar = bossBar
         )
         
         activeBosses[boss] = data
@@ -124,7 +125,7 @@ class FrostTitanBoss(private val plugin: SurvivalPlus) {
     /**
      * Setup Boss Bar
      */
-    private fun setupBossBar(boss: IronGolem, worldTier: Int) {
+    private fun setupBossBar(boss: IronGolem, worldTier: Int): BossBar {
         val bossBar = Bukkit.createBossBar(
             "§b§lFrost-Titan §8(Tier $worldTier) §c❤",
             BarColor.BLUE,
@@ -134,7 +135,7 @@ class FrostTitanBoss(private val plugin: SurvivalPlus) {
         bossBar.isVisible = true
         bossBar.progress = 1.0
         
-        // Speichere BossBar in Boss Data (später)
+        return bossBar
     }
 
     /**
@@ -541,8 +542,42 @@ class FrostTitanBoss(private val plugin: SurvivalPlus) {
         // Enchanted Books (guaranteed)
         repeat(data.worldTier) {
             val bookQuality = if (data.worldTier >= 4) Quality.LEGENDARY else Quality.EPIC
-            // TODO: Create enchanted book via EnchantmentManager
-            location.world?.dropItemNaturally(location, ItemStack(Material.ENCHANTED_BOOK))
+            val enchantedBook = plugin.enchantmentManager.createRandomEnchantedBook(bookQuality)
+            location.world?.dropItemNaturally(location, enchantedBook)
+        }
+        
+        // Glacial-Set Item (Unique Boss Drop) - 15% Chance
+        val glacialSetChance = plugin.config.getDouble("bosses.frost-titan.glacial-set-chance", 0.15)
+        if (Math.random() < glacialSetChance) {
+            val glacialMaterials = listOf(
+                Material.DIAMOND_HELMET,
+                Material.DIAMOND_CHESTPLATE,
+                Material.DIAMOND_LEGGINGS,
+                Material.DIAMOND_BOOTS
+            )
+            val material = glacialMaterials.random()
+            val glacialItem = plugin.itemManager.createItem(material, Quality.LEGENDARY)
+            
+            // Add Glacial Set Tag
+            val meta = glacialItem.itemMeta!!
+            val setKey = org.bukkit.NamespacedKey(plugin, "armor_set")
+            meta.persistentDataContainer.set(setKey, org.bukkit.persistence.PersistentDataType.STRING, "GLACIAL")
+            
+            // Update lore
+            val lore = meta.lore()?.toMutableList() ?: mutableListOf()
+            lore.add(net.kyori.adventure.text.Component.text(""))
+            lore.add(net.kyori.adventure.text.Component.text("§b§l❄ GLACIAL-SET ❄", net.kyori.adventure.text.format.TextColor.color(100, 200, 255)))
+            lore.add(net.kyori.adventure.text.Component.text("§7Frost-Titan's Erbe", net.kyori.adventure.text.format.NamedTextColor.GRAY))
+            meta.lore(lore)
+            glacialItem.itemMeta = meta
+            
+            location.world?.dropItemNaturally(location, glacialItem)
+            
+            // Announce rare drop
+            location.world?.players?.forEach { player ->
+                player.sendMessage(net.kyori.adventure.text.Component.text("§b§l❄ SELTENER DROP: §3${meta.displayName()} §b(Glacial-Set)"))
+                player.playSound(player.location, org.bukkit.Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1.5f)
+            }
         }
     }
 

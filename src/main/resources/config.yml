@@ -454,3 +454,57 @@ portals:
 
   # Debug-Logging
   debug: false
+
+# ===================================
+# BOSS SYSTEM (v1.2.0+)
+# ===================================
+bosses:
+  # Globale Boss-Einstellungen
+  enabled: true
+  spawn-cooldown: 300  # Sekunden zwischen Boss-Spawns (5 Minuten)
+  announce-spawn: true
+  announce-death: true
+  
+  # Harvester Boss (Nether)
+  harvester:
+    enabled: true
+    base-health: 500.0
+    base-damage: 15.0
+    base-armor: 10.0
+    health-per-tier: 0.5  # +50% pro World Tier
+    damage-per-tier: 0.5
+    # Phase-spezifische Cooldowns (Sekunden)
+    blaze-summon-cooldown: 10
+    fire-wave-cooldown: 15
+    lava-pool-cooldown: 12.5
+    # Loot-Multiplikatoren
+    loot-multiplier: 1.0
+    custom-items-per-tier: 1  # +1 Item pro Tier
+    enchanted-books-per-tier: 1
+    # Unique Boss-Drop Chance
+    inferno-set-chance: 0.15  # 15% Chance auf Inferno-Set Item
+  
+  # Frost Titan Boss (Ice Peaks)
+  frost-titan:
+    enabled: true
+    base-health: 600.0
+    base-damage: 12.0
+    base-armor: 15.0
+    health-per-tier: 0.5  # +50% pro World Tier
+    damage-per-tier: 0.5
+    # Phase-spezifische Cooldowns (Sekunden)
+    ice-spike-cooldown: 7.5
+    frost-aura-cooldown: 10
+    blizzard-cooldown: 15
+    freeze-duration: 3  # Sekunden
+    # Loot-Multiplikatoren
+    loot-multiplier: 1.0
+    custom-items-per-tier: 1
+    enchanted-books-per-tier: 1
+    # Unique Boss-Drop Chance
+    glacial-set-chance: 0.15  # 15% Chance auf Glacial-Set Item
+  
+  # Butcher Boss (existing)
+  butcher:
+    enabled: true
+    min-world-tier: 2

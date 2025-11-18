@@ -162,6 +162,57 @@ enum class ArmorSet(
                 BonusEffect.AbilityBonus("Göttliche Macht")
             )
         )
+    ),
+
+    // Boss-Sets (v1.2.0+)
+    INFERNO(
+        "Inferno-Set",
+        "Der Ernter's flammendes Erbe",
+        Quality.LEGENDARY,
+        TextColor.color(255, 80, 20), // Orange-Red
+        SetBonus(
+            "Inferno I",
+            listOf(
+                BonusEffect.AttributeBonus(Attribute.ATTACK_DAMAGE, 3.0),
+                BonusEffect.PotionBonus(PotionEffectType.FIRE_RESISTANCE, 0),
+                BonusEffect.ElementalDamageBonus(0.15) // +15% Feuer-Schaden
+            )
+        ),
+        SetBonus(
+            "Inferno II",
+            listOf(
+                BonusEffect.AttributeBonus(Attribute.ATTACK_DAMAGE, 6.0),
+                BonusEffect.AttributeBonus(Attribute.MAX_HEALTH, 8.0),
+                BonusEffect.PotionBonus(PotionEffectType.FIRE_RESISTANCE, 0),
+                BonusEffect.ElementalDamageBonus(0.30), // +30% Feuer-Schaden
+                BonusEffect.AbilityBonus("flame_aura") // Flammen-Aura (brennt Feinde in Nähe)
+            )
+        )
+    ),
+
+    GLACIAL(
+        "Glacial-Set",
+        "Frost-Titan's eisige Macht",
+        Quality.LEGENDARY,
+        TextColor.color(100, 200, 255), // Ice Blue
+        SetBonus(
+            "Glacial I",
+            listOf(
+                BonusEffect.AttributeBonus(Attribute.ARMOR, 4.0),
+                BonusEffect.PotionBonus(PotionEffectType.SLOWNESS, -1), // Slow Resistance
+                BonusEffect.ElementalDamageBonus(0.15) // +15% Ice-Schaden
+            )
+        ),
+        SetBonus(
+            "Glacial II",
+            listOf(
+                BonusEffect.AttributeBonus(Attribute.ARMOR, 8.0),
+                BonusEffect.AttributeBonus(Attribute.MAX_HEALTH, 10.0),
+                BonusEffect.PotionBonus(PotionEffectType.SLOWNESS, -1), // Slow Immunity
+                BonusEffect.ElementalDamageBonus(0.30), // +30% Ice-Schaden
+                BonusEffect.AbilityBonus("freeze_chance") // 20% Chance Gegner zu frieren
+            )
+        )
     );
 
     companion object {

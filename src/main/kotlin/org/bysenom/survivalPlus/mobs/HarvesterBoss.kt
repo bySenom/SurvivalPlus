@@ -63,7 +63,7 @@ class HarvesterBoss(private val plugin: SurvivalPlus) {
         
         // Setup Boss
         setupBossEntity(boss, worldTier)
-        setupBossBar(boss, worldTier)
+        val bossBar = setupBossBar(boss, worldTier)
         
         // Boss Data
         val data = BossData(
@@ -73,7 +73,8 @@ class HarvesterBoss(private val plugin: SurvivalPlus) {
             spawnLocation = location,
             lastBlazeSummon = 0L,
             lastFireWave = 0L,
-            lastLavaPool = 0L
+            lastLavaPool = 0L,
+            bossBar = bossBar
         )
         
         activeBosses[boss] = data
@@ -130,7 +131,7 @@ class HarvesterBoss(private val plugin: SurvivalPlus) {
     /**
      * Setup Boss Bar
      */
-    private fun setupBossBar(boss: WitherSkeleton, worldTier: Int) {
+    private fun setupBossBar(boss: WitherSkeleton, worldTier: Int): BossBar {
         val bossBar = Bukkit.createBossBar(
             "§6§lDer Ernter §8(Tier $worldTier) §c❤",
             BarColor.RED,
@@ -140,7 +141,7 @@ class HarvesterBoss(private val plugin: SurvivalPlus) {
         bossBar.isVisible = true
         bossBar.progress = 1.0
         
-        // Speichere BossBar in Boss Data (später)
+        return bossBar
     }
 
     /**
@@ -487,8 +488,42 @@ class HarvesterBoss(private val plugin: SurvivalPlus) {
         // Enchanted Books (guaranteed)
         repeat(data.worldTier) {
             val bookQuality = if (data.worldTier >= 4) Quality.LEGENDARY else Quality.EPIC
-            // TODO: Create enchanted book via EnchantmentManager
-            location.world?.dropItemNaturally(location, ItemStack(Material.ENCHANTED_BOOK))
+            val enchantedBook = plugin.enchantmentManager.createRandomEnchantedBook(bookQuality)
+            location.world?.dropItemNaturally(location, enchantedBook)
+        }
+        
+        // Inferno-Set Item (Unique Boss Drop) - 15% Chance
+        val infernoSetChance = plugin.config.getDouble("bosses.harvester.inferno-set-chance", 0.15)
+        if (Math.random() < infernoSetChance) {
+            val infernoMaterials = listOf(
+                Material.NETHERITE_HELMET,
+                Material.NETHERITE_CHESTPLATE,
+                Material.NETHERITE_LEGGINGS,
+                Material.NETHERITE_BOOTS
+            )
+            val material = infernoMaterials.random()
+            val infernoItem = plugin.itemManager.createItem(material, Quality.LEGENDARY)
+            
+            // Add Inferno Set Tag
+            val meta = infernoItem.itemMeta!!
+            val setKey = org.bukkit.NamespacedKey(plugin, "armor_set")
+            meta.persistentDataContainer.set(setKey, org.bukkit.persistence.PersistentDataType.STRING, "INFERNO")
+            
+            // Update lore
+            val lore = meta.lore()?.toMutableList() ?: mutableListOf()
+            lore.add(net.kyori.adventure.text.Component.text(""))
+            lore.add(net.kyori.adventure.text.Component.text("§6§l✦ INFERNO-SET ✦", net.kyori.adventure.text.format.TextColor.color(255, 80, 20)))
+            lore.add(net.kyori.adventure.text.Component.text("§7Der Ernter's Erbe", net.kyori.adventure.text.format.NamedTextColor.GRAY))
+            meta.lore(lore)
+            infernoItem.itemMeta = meta
+            
+            location.world?.dropItemNaturally(location, infernoItem)
+            
+            // Announce rare drop
+            location.world?.players?.forEach { player ->
+                player.sendMessage(net.kyori.adventure.text.Component.text("§6§l✦ SELTENER DROP: §c${meta.displayName()} §6(Inferno-Set)"))
+                player.playSound(player.location, org.bukkit.Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1.2f)
+            }
         }
     }
 
