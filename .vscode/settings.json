@@ -3,5 +3,6 @@
     "cSpell.words": [
         "bukkit",
         "bysenom"
-    ]
+    ],
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

@@ -119,8 +119,8 @@ class SkillDataManager(private val plugin: SurvivalPlus) {
 
         // Level-Up prüfen
         val requiredXP = skill.getRequiredXP(data.level)
-        if (data.xp >= requiredXP) {
-            data.xp -= requiredXP
+        if (data.xp >= requiredXP.toInt()) {
+            data.xp -= requiredXP.toInt()
             data.level++
             
             // Benachrichtige SkillManager über Level-Up

@@ -112,7 +112,7 @@ class AchievementManager(private val plugin: SurvivalPlus) {
         player.playSound(player.location, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f)
         player.showTitle(
             net.kyori.adventure.title.Title.title(
-                Component.text("🏆").color(NamedTextColor.GOLD),
+                Component.text("🏆 Erfolg!").color(NamedTextColor.GOLD),
                 Component.text(achievement.displayName).color(NamedTextColor.YELLOW)
             )
         )
