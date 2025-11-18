@@ -320,16 +320,49 @@ class WorldBossArenaManager(private val plugin: SurvivalPlus) {
                 
                 // Warnungen bei 60, 30, 10, 5, 3, 2, 1 Sekunden
                 if (timeLeft in listOf(60, 30, 10, 5, 3, 2, 1)) {
-                    val warning = Component.text()
-                        .append(Component.text("⚠ ").color(NamedTextColor.RED))
-                        .append(Component.text("Arena schließt in ").color(NamedTextColor.YELLOW))
-                        .append(Component.text("$timeLeft").color(NamedTextColor.RED).decorate(TextDecoration.BOLD))
-                        .append(Component.text(" Sekunden!").color(NamedTextColor.YELLOW))
-                        .build()
-                    
-                    playersInBossWorld.forEach { player ->
-                        player.sendMessage(warning)
-                        player.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f)
+                    // Bei 60 Sekunden: Anklickbare Nachricht
+                    if (timeLeft == 60) {
+                        val clickableWarning = Component.text()
+                            .append(Component.text("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n").color(NamedTextColor.DARK_GRAY))
+                            .append(Component.text("⚠ ").color(NamedTextColor.RED).decorate(TextDecoration.BOLD))
+                            .append(Component.text("LETZTE MINUTE").color(NamedTextColor.RED).decorate(TextDecoration.BOLD))
+                            .append(Component.text("! ⚠\n").color(NamedTextColor.RED).decorate(TextDecoration.BOLD))
+                            .append(Component.text("\n"))
+                            .append(Component.text("Die Arena schließt in ").color(NamedTextColor.YELLOW))
+                            .append(Component.text("60 Sekunden").color(NamedTextColor.RED).decorate(TextDecoration.BOLD))
+                            .append(Component.text("!\n").color(NamedTextColor.YELLOW))
+                            .append(Component.text("\n"))
+                            .append(Component.text("» ").color(NamedTextColor.DARK_GRAY))
+                            .append(
+                                Component.text("[JETZT VERLASSEN!]")
+                                    .color(NamedTextColor.RED)
+                                    .decorate(TextDecoration.BOLD)
+                                    .clickEvent(ClickEvent.runCommand("/sp arena leave"))
+                                    .hoverEvent(HoverEvent.showText(
+                                        Component.text("Klicke um sofort zur Arena zu verlassen!").color(NamedTextColor.YELLOW)
+                                    ))
+                            )
+                            .append(Component.text(" «\n").color(NamedTextColor.DARK_GRAY))
+                            .append(Component.text("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━").color(NamedTextColor.DARK_GRAY))
+                            .build()
+                        
+                        playersInBossWorld.forEach { player ->
+                            player.sendMessage(clickableWarning)
+                            player.playSound(player.location, Sound.ENTITY_ENDER_DRAGON_GROWL, 0.5f, 1.5f)
+                        }
+                    } else {
+                        // Normale Warnungen
+                        val warning = Component.text()
+                            .append(Component.text("⚠ ").color(NamedTextColor.RED))
+                            .append(Component.text("Arena schließt in ").color(NamedTextColor.YELLOW))
+                            .append(Component.text("$timeLeft").color(NamedTextColor.RED).decorate(TextDecoration.BOLD))
+                            .append(Component.text(" Sekunden!").color(NamedTextColor.YELLOW))
+                            .build()
+                        
+                        playersInBossWorld.forEach { player ->
+                            player.sendMessage(warning)
+                            player.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f)
+                        }
                     }
                 }
                 

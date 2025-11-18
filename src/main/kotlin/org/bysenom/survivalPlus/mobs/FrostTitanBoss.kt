@@ -60,6 +60,9 @@ class FrostTitanBoss(private val plugin: SurvivalPlus) {
     fun spawn(location: Location, worldTier: Int = 1): IronGolem? {
         val world = location.world ?: return null
         
+        // Nicht in Boss Arena spawnen
+        if (world.name == "Survival_boss") return null
+        
         // Spawne Iron Golem
         val boss = world.spawnEntity(location, EntityType.IRON_GOLEM) as IronGolem
         

@@ -64,6 +64,9 @@ class ButcherBoss(private val plugin: SurvivalPlus) {
     fun trySpawnButcher(location: Location): Zombie? {
         val world = location.world ?: return null
 
+        // Nicht in Boss Arena spawnen
+        if (world.name == "Survival_boss") return null
+
         // Nur in aktivierten Welten
         if (!plugin.worldTierManager.isEnabledWorld(world)) return null
 

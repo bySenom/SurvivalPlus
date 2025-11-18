@@ -73,6 +73,9 @@ class HarvesterBoss(private val plugin: SurvivalPlus) {
     fun spawn(location: Location, worldTier: Int = 1): WitherSkeleton? {
         val world = location.world ?: return null
         
+        // Nicht in Boss Arena spawnen
+        if (world.name == "Survival_boss") return null
+        
         // Spawne Wither Skeleton
         val boss = world.spawnEntity(location, EntityType.WITHER_SKELETON) as WitherSkeleton
         
