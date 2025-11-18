@@ -278,6 +278,29 @@ class WorldBossArenaManager(private val plugin: SurvivalPlus) {
     }
 
     /**
+     * Forciert Boss-Spawn in 60 Sekunden (Debug)
+     */
+    fun forceSpawnBoss(): Boolean {
+        // Prüfe ob Boss bereits aktiv
+        if (activeBoss != null) {
+            return false
+        }
+        
+        // Prüfe ob Arena verfügbar
+        if (arenaCenter == null) {
+            return false
+        }
+        
+        // Setze Spawn-Zeit auf 60 Sekunden
+        nextBossTime = System.currentTimeMillis() + 60000L
+        warningGiven = false
+        
+        plugin.logger.info("✓ Boss-Spawn forciert! Spawn in 60 Sekunden")
+        
+        return true
+    }
+
+    /**
      * Boss wurde getötet - Starte 60-Sekunden Countdown
      */
     fun onBossDefeated() {

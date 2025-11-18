@@ -1079,6 +1079,33 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
         }
 
         when (args.getOrNull(1)?.lowercase()) {
+            "spawn" -> {
+                // /sp debug spawn worldboss
+                if (args.size < 3) {
+                    sender.sendMessage(Component.text("Verwendung: /sp debug spawn worldboss")
+                        .color(NamedTextColor.RED))
+                    return
+                }
+                
+                when (args[2].lowercase()) {
+                    "worldboss", "boss", "titan" -> {
+                        val success = plugin.worldBossArenaManager.forceSpawnBoss()
+                        if (success) {
+                            sender.sendMessage(Component.text("✓ World Boss wird in 60 Sekunden gespawnt!")
+                                .color(NamedTextColor.GREEN))
+                        } else {
+                            sender.sendMessage(Component.text("⚠ Boss ist bereits aktiv oder Arena nicht verfügbar!")
+                                .color(NamedTextColor.RED))
+                        }
+                    }
+                    else -> {
+                        sender.sendMessage(Component.text("Unbekannter Boss-Typ!")
+                            .color(NamedTextColor.RED))
+                        sender.sendMessage(Component.text("Verfügbar: worldboss")
+                            .color(NamedTextColor.GRAY))
+                    }
+                }
+            }
             "memory", "cache" -> {
                 sender.sendMessage(Component.text("=== SurvivalPlus Debug Info ===")
                     .color(NamedTextColor.GOLD))
@@ -1118,6 +1145,8 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
             else -> {
                 sender.sendMessage(Component.text("Verwendung:")
                     .color(NamedTextColor.YELLOW))
+                sender.sendMessage(Component.text("/sp debug spawn worldboss - Forciert Boss-Spawn in 60s")
+                    .color(NamedTextColor.GRAY))
                 sender.sendMessage(Component.text("/sp debug memory - Zeigt Cache-Statistiken")
                     .color(NamedTextColor.GRAY))
                 sender.sendMessage(Component.text("/sp debug clear - Leert alle Caches")
@@ -1155,7 +1184,11 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
             .color(NamedTextColor.YELLOW))
         sender.sendMessage(Component.text("/sp boss spawn <harvester|frosttitan> [tier] - Spawnt neue Bosse")
             .color(NamedTextColor.YELLOW))
+        sender.sendMessage(Component.text("/sp arena enter/leave - Teleportiere zur/von Boss Arena")
+            .color(NamedTextColor.YELLOW))
         sender.sendMessage(Component.text("/sp reload - Lädt die Config neu")
+            .color(NamedTextColor.YELLOW))
+        sender.sendMessage(Component.text("/sp debug spawn worldboss - Forciert World Boss Spawn (60s)")
             .color(NamedTextColor.YELLOW))
         sender.sendMessage(Component.text("/sp debug [memory|clear] - Debug-Informationen")
             .color(NamedTextColor.YELLOW))
@@ -1246,7 +1279,7 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
                 "worldtier" -> listOf("set", "up", "down")
                 "locate" -> listOf("shrine")
                 "shrine" -> listOf("generate", "list", "info")
-                "debug" -> listOf("memory", "cache", "clear")
+                "debug" -> listOf("spawn", "memory", "cache", "clear")
                 "butcher" -> listOf("spawn")
                 "boss" -> listOf("spawn")
                 "sb" -> listOf("toggle")
@@ -1260,6 +1293,7 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
                 "worldtier" -> if (args[1].lowercase() == "set") listOf("1", "2", "3", "4", "5") else emptyList()
                 "butcher" -> if (args[1].lowercase() == "spawn") listOf("2", "3", "4", "5") else emptyList()
                 "boss" -> if (args[1].lowercase() == "spawn") listOf("harvester", "frosttitan") else emptyList()
+                "debug" -> if (args[1].lowercase() == "spawn") listOf("worldboss", "boss", "titan") else emptyList()
                 else -> emptyList()
             }
             4 -> when (args[0].lowercase()) {
