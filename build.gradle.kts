@@ -45,3 +45,29 @@ tasks.processResources {
         expand(props)
     }
 }
+
+// Deploy zur lokalen Test-Server-Plugins-Mappe
+val deployTarget = file("C:/Users/SashaW/IdeaProjects/HubPlugin/run/plugins")
+
+tasks.register<Copy>("deployPlugin") {
+    dependsOn(tasks.named("shadowJar"))
+    from(layout.buildDirectory.dir("libs"))
+    include("SurvivalPlus-*-all.jar")
+    into(deployTarget)
+    doFirst {
+        // Alte Versionen entfernen, damit nur 1 Datei liegt
+        if (deployTarget.exists()) {
+            project.delete(project.fileTree(deployTarget) { include("SurvivalPlus-*-all.jar") })
+        } else {
+            deployTarget.mkdirs()
+        }
+    }
+    doLast {
+        println("✓ Plugin nach ${deployTarget} kopiert.")
+    }
+}
+
+// Nach dem normalen Build automatisch deployen
+tasks.build {
+    finalizedBy("deployPlugin")
+}

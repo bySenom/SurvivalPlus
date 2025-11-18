@@ -2,3 +2,70 @@ name: SurvivalPlus
 version: '1.0-SNAPSHOT'
 main: org.bysenom.survivalPlus.SurvivalPlus
 api-version: '1.21'
+author: SashaW
+description: Ein Survival-Plugin mit Tierify-ähnlichen Features wie Qualitätsstufen und Reforging
+
+commands:
+  survivalplus:
+    description: Haupt-Command für SurvivalPlus
+    usage: /<command> [give|giveblock|reforge|craft|info|worldtier|startevent|locate|reload]
+    aliases: [sp, splus]
+
+permissions:
+  survivalplus.*:
+    description: Gibt Zugriff auf alle SurvivalPlus Befehle
+    children:
+      survivalplus.give: true
+      survivalplus.giveblock: true
+      survivalplus.reforge: true
+      survivalplus.info: true
+      survivalplus.worldtier: true
+      survivalplus.event: true
+      survivalplus.locate: true
+      survivalplus.shrine: true
+      survivalplus.reload: true
+      survivalplus.debug: true
+
+  survivalplus.give:
+    description: Erlaubt das Geben von Custom Items
+    default: op
+
+  survivalplus.giveblock:
+    description: Erlaubt das Geben von Custom Blocks
+    default: op
+
+  survivalplus.reforge:
+    description: Erlaubt das Reforgen von Items
+    default: true
+
+  survivalplus.info:
+    description: Zeigt Item-Informationen an
+    default: true
+
+  survivalplus.worldtier:
+    description: Erlaubt das Verwalten des World Tier Systems
+    default: op
+
+  survivalplus.event:
+    description: Erlaubt das manuelle Starten von World Events
+    default: op
+
+  survivalplus.locate:
+    description: Erlaubt das Lokalisieren von Strukturen
+    default: op
+
+  survivalplus.shrine:
+    description: Erlaubt das Verwalten von Shrines
+    default: op
+
+  survivalplus.reload:
+    description: Erlaubt das Neuladen der Config
+    default: op
+
+  survivalplus.debug:
+    description: Erlaubt den Zugriff auf Debug-Informationen
+    default: op
+
+  survivalplus.scoreboard:
+    description: Erlaubt das Nutzen des Scoreboard Toggles
+    default: true
