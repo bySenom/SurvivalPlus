@@ -127,6 +127,15 @@ class SurvivalPlus : JavaPlugin() {
     lateinit var tradingGUI: org.bysenom.survivalPlus.trading.TradingGUI
         private set
 
+    lateinit var customOreManager: org.bysenom.survivalPlus.generation.CustomOreManager
+        private set
+
+    lateinit var worldBossArenaManager: org.bysenom.survivalPlus.bosses.WorldBossArenaManager
+        private set
+
+    var titanGolemBoss: org.bysenom.survivalPlus.bosses.TitanGolemBoss? = null
+        private set
+
     override fun onEnable() {
         // ASCII Art Logo
         logger.info("  ____                  _            _ ____  _           ")
@@ -170,6 +179,9 @@ class SurvivalPlus : JavaPlugin() {
         achievementsGUI = org.bysenom.survivalPlus.gui.AchievementsGUI(this)
         tradeManager = org.bysenom.survivalPlus.trading.TradeManager(this)
         tradingGUI = org.bysenom.survivalPlus.trading.TradingGUI(this)
+        customOreManager = org.bysenom.survivalPlus.generation.CustomOreManager(this)
+        worldBossArenaManager = org.bysenom.survivalPlus.bosses.WorldBossArenaManager(this)
+        titanGolemBoss = org.bysenom.survivalPlus.bosses.TitanGolemBoss(this)
 
         // Commands registrieren
         val command = getCommand("survivalplus")
@@ -205,6 +217,7 @@ class SurvivalPlus : JavaPlugin() {
         server.pluginManager.registerEvents(achievementsGUI, this)
         server.pluginManager.registerEvents(tradingGUI, this)
         server.pluginManager.registerEvents(org.bysenom.survivalPlus.trading.TradingListener(this), this)
+        server.pluginManager.registerEvents(customOreManager, this) // Ore Generation
 
         // Rezepte registrieren
         customBlockRecipes.registerRecipes()
@@ -212,6 +225,8 @@ class SurvivalPlus : JavaPlugin() {
         // Starte Systeme
         worldEventManager.start()
         scoreboardManager.start()
+        worldBossArenaManager.initialize()
+        customOreManager.logGenerationInfo()
 
         // Starte Shrine Proximity Task (wenn aktiviert)
         if (config.getBoolean("shrines.proximity-check", true)) {
@@ -305,6 +320,12 @@ class SurvivalPlus : JavaPlugin() {
 
         if (::frostTitanBoss.isInitialized) {
             frostTitanBoss.cleanup()
+        }
+
+        titanGolemBoss?.shutdown()
+
+        if (::worldBossArenaManager.isInitialized) {
+            worldBossArenaManager.shutdown()
         }
 
         if (::worldEventManager.isInitialized) {

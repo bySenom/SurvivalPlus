@@ -55,6 +55,7 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
             "shrine" -> handleShrine(sender, args)
             "butcher" -> handleButcher(sender, args)
             "boss" -> handleBoss(sender, args)
+            "arena" -> handleArena(sender, args)
             "reload" -> handleReload(sender)
             "debug" -> handleDebug(sender, args)
             "sb" , "scoreboard" -> handleScoreboard(sender, args)
@@ -950,6 +951,83 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
             }
             else -> {
                 sender.sendMessage(Component.text("Unbekannter Befehl! Nutze: spawn")
+                    .color(NamedTextColor.RED))
+            }
+        }
+    }
+
+    private fun handleArena(sender: CommandSender, args: Array<out String>) {
+        if (sender !is Player) {
+            sender.sendMessage(Component.text("Nur Spieler können diesen Befehl nutzen!")
+                .color(NamedTextColor.RED))
+            return
+        }
+
+        if (!sender.hasPermission("survivalplus.arena")) {
+            sender.sendMessage(Component.text("Keine Berechtigung!")
+                .color(NamedTextColor.RED))
+            return
+        }
+
+        if (args.size < 2) {
+            sender.sendMessage(Component.text("Verwendung: /sp arena <enter|leave|info>")
+                .color(NamedTextColor.RED))
+            return
+        }
+
+        val arenaManager = plugin.worldBossArenaManager
+
+        when (args[1].lowercase()) {
+            "enter" -> {
+                if (arenaManager.isInArena(sender)) {
+                    sender.sendMessage(Component.text("⚠ Du bist bereits in der Arena!")
+                        .color(NamedTextColor.YELLOW))
+                    return
+                }
+
+                if (arenaManager.teleportToArena(sender)) {
+                    val timeUntilBoss = arenaManager.getTimeUntilNextBoss()
+                    val minutes = timeUntilBoss / 60
+                    val seconds = timeUntilBoss % 60
+
+                    sender.sendMessage(Component.text("⚔ World Boss Arena ⚔").color(NamedTextColor.GOLD))
+                    sender.sendMessage(Component.text("Nächster Boss spawn in: ${minutes}m ${seconds}s").color(NamedTextColor.YELLOW))
+                    sender.sendMessage(Component.text("Verlasse mit: /sp arena leave").color(NamedTextColor.GRAY))
+                }
+            }
+            "leave" -> {
+                if (!arenaManager.isInArena(sender)) {
+                    sender.sendMessage(Component.text("⚠ Du bist nicht in der Arena!")
+                        .color(NamedTextColor.YELLOW))
+                    return
+                }
+
+                arenaManager.teleportFromArena(sender)
+            }
+            "info" -> {
+                val timeUntilBoss = arenaManager.getTimeUntilNextBoss()
+                val minutes = timeUntilBoss / 60
+                val seconds = timeUntilBoss % 60
+
+                sender.sendMessage(Component.text("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━").color(NamedTextColor.DARK_GRAY))
+                sender.sendMessage(Component.text("⚔ World Boss Arena Info ⚔").color(NamedTextColor.GOLD))
+                sender.sendMessage(Component.empty())
+                sender.sendMessage(Component.text("Boss: ").color(NamedTextColor.GRAY)
+                    .append(Component.text("Titan Golem").color(NamedTextColor.YELLOW)))
+                sender.sendMessage(Component.text("Nächster Spawn: ").color(NamedTextColor.GRAY)
+                    .append(Component.text("${minutes}m ${seconds}s").color(NamedTextColor.GREEN)))
+                sender.sendMessage(Component.text("Arena-Welt: ").color(NamedTextColor.GRAY)
+                    .append(Component.text("Survival_boss").color(NamedTextColor.AQUA)))
+                sender.sendMessage(Component.empty())
+                sender.sendMessage(Component.text("Befehle:").color(NamedTextColor.YELLOW))
+                sender.sendMessage(Component.text("  /sp arena enter").color(NamedTextColor.GRAY)
+                    .append(Component.text(" - Betrete die Arena").color(NamedTextColor.WHITE)))
+                sender.sendMessage(Component.text("  /sp arena leave").color(NamedTextColor.GRAY)
+                    .append(Component.text(" - Verlasse die Arena").color(NamedTextColor.WHITE)))
+                sender.sendMessage(Component.text("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━").color(NamedTextColor.DARK_GRAY))
+            }
+            else -> {
+                sender.sendMessage(Component.text("Unbekannter Befehl! Nutze: enter, leave, info")
                     .color(NamedTextColor.RED))
             }
         }

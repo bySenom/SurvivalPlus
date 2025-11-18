@@ -508,3 +508,45 @@ bosses:
   butcher:
     enabled: true
     min-world-tier: 2
+  
+  # Titan Golem Boss (World Boss Arena)
+  titan-golem:
+    enabled: true
+    base-health: 1000.0
+    base-damage: 20.0
+    spawn-interval: 30  # Minuten zwischen Spawns
+    warning-time: 60    # Sekunden vor Spawn
+    loot-multiplier: 2.0  # Doppeltes Loot
+    custom-items-per-tier: 2
+    enchanted-books-per-tier: 2
+
+# ===================================
+# ORE GENERATION (v1.3.0+)
+# ===================================
+ore-generation:
+  # Limestone (Calcite) - Overworld Reforging Tier 1
+  limestone:
+    enabled: true
+    veins-per-chunk: 8
+    min-y: -64
+    max-y: 64
+    min-vein-size: 3
+    max-vein-size: 6
+  
+  # Pyrite (Raw Gold Block) - Nether Reforging Tier 2
+  pyrite:
+    enabled: true
+    veins-per-chunk: 5
+    min-y: 10
+    max-y: 118
+    min-vein-size: 2
+    max-vein-size: 4
+  
+  # Galena (Tuff) - End Reforging Tier 3
+  galena:
+    enabled: true
+    veins-per-chunk: 4
+    min-y: 0
+    max-y: 128
+    min-vein-size: 2
+    max-vein-size: 3
