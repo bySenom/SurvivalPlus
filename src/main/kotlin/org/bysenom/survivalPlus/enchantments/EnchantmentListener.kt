@@ -55,6 +55,10 @@ class EnchantmentListener(private val plugin: SurvivalPlus) : Listener {
         if (event.damager !is Player) return
 
         val player = event.damager as Player
+        
+        // Nur in aktivierten Welten
+        if (!plugin.worldTierManager.isEnabledWorld(player.world)) return
+        
         val weapon = player.inventory.itemInMainHand
 
         if (weapon.type.isAir) return
@@ -146,6 +150,9 @@ class EnchantmentListener(private val plugin: SurvivalPlus) : Listener {
         if (event.entity !is Player) return
 
         val player = event.entity as Player
+        
+        // Nur in aktivierten Welten
+        if (!plugin.worldTierManager.isEnabledWorld(player.world)) return
 
         // Prüfe alle Rüstungsteile
         val armor = listOfNotNull(
@@ -191,6 +198,10 @@ class EnchantmentListener(private val plugin: SurvivalPlus) : Listener {
         if (event.isCancelled) return
 
         val player = event.player
+        
+        // Nur in aktivierten Welten
+        if (!plugin.worldTierManager.isEnabledWorld(player.world)) return
+        
         val tool = player.inventory.itemInMainHand
 
         if (tool.type.isAir) return

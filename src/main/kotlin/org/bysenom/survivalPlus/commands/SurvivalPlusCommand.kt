@@ -23,6 +23,18 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
         label: String,
         args: Array<out String>
     ): Boolean {
+        // Prüfe ob Spieler in aktivierter Welt ist (außer für Admin-Commands)
+        if (sender is Player && args.isNotEmpty()) {
+            val adminCommands = listOf("reload", "debug")
+            if (!adminCommands.contains(args[0].lowercase())) {
+                if (!plugin.worldTierManager.isEnabledWorld(sender.world)) {
+                    sender.sendMessage(Component.text("⚠ SurvivalPlus ist nur in Survival-Welten aktiv!")
+                        .color(NamedTextColor.RED))
+                    return true
+                }
+            }
+        }
+        
         if (args.isEmpty()) {
             sendHelp(sender)
             return true

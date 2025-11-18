@@ -18,9 +18,14 @@ class SetBonusListener(private val plugin: SurvivalPlus) : Listener {
      */
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
+        val player = event.player
+        
+        // Nur in aktivierten Welten
+        if (!plugin.worldTierManager.isEnabledWorld(player.world)) return
+        
         // Delay damit Inventar geladen ist
         plugin.server.scheduler.runTaskLater(plugin, Runnable {
-            plugin.setBonusManager.checkSetBonuses(event.player)
+            plugin.setBonusManager.checkSetBonuses(player)
         }, 20L)
     }
 
@@ -41,6 +46,9 @@ class SetBonusListener(private val plugin: SurvivalPlus) : Listener {
         if (event.whoClicked !is Player) return
 
         val player = event.whoClicked as Player
+        
+        // Nur in aktivierten Welten
+        if (!plugin.worldTierManager.isEnabledWorld(player.world)) return
 
         // Delay für Inventar-Update
         plugin.server.scheduler.runTaskLater(plugin, Runnable {
@@ -53,6 +61,11 @@ class SetBonusListener(private val plugin: SurvivalPlus) : Listener {
      */
     @EventHandler
     fun onItemHeld(event: PlayerItemHeldEvent) {
+        val player = event.player
+        
+        // Nur in aktivierten Welten
+        if (!plugin.worldTierManager.isEnabledWorld(player.world)) return
+        
         // Delay für Update
         plugin.server.scheduler.runTaskLater(plugin, Runnable {
             plugin.setBonusManager.checkSetBonuses(event.player)
@@ -68,6 +81,9 @@ class SetBonusListener(private val plugin: SurvivalPlus) : Listener {
         if (event.damager !is Player) return
 
         val player = event.damager as Player
+        
+        // Nur in aktivierten Welten
+        if (!plugin.worldTierManager.isEnabledWorld(player.world)) return
 
         // Hole Krit-Chance von Set-Boni
         val critChance = plugin.setBonusManager.getCritChanceBonus(player)

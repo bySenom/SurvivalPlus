@@ -23,6 +23,9 @@ class ItemListener(private val plugin: SurvivalPlus) : Listener {
         val entity = event.entity
         if (entity !is Monster) return
 
+        // Nur in aktivierten Welten
+        if (!plugin.worldTierManager.isEnabledWorld(entity.world)) return
+
         // Boss-Minions droppen kein Loot
         val minionKey = org.bukkit.NamespacedKey(plugin, "boss_minion")
         if (entity.persistentDataContainer.has(minionKey, org.bukkit.persistence.PersistentDataType.BYTE)) {
@@ -75,6 +78,9 @@ class ItemListener(private val plugin: SurvivalPlus) : Listener {
         if (event.state != PlayerFishEvent.State.CAUGHT_FISH) return
 
         val player = event.player
+
+        // Nur in aktivierten Welten
+        if (!plugin.worldTierManager.isEnabledWorld(player.world)) return
 
         // 20% Chance für Custom Item statt normalem Fisch
         if (Random.nextDouble() < 0.20) {

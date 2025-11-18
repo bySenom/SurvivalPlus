@@ -21,6 +21,10 @@ class CustomCraftingListener(private val plugin: SurvivalPlus) : Listener {
         if (!view.title().toString().contains(CustomCraftingGUI.GUI_TITLE)) return
 
         val player = event.whoClicked as? Player ?: return
+        
+        // Nur in aktivierten Welten
+        if (!plugin.worldTierManager.isEnabledWorld(player.world)) return
+        
         val clickedSlot = event.rawSlot
         val inventory = view.topInventory
 

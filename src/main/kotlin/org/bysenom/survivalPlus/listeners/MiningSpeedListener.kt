@@ -24,6 +24,9 @@ class MiningSpeedListener(private val plugin: SurvivalPlus) : Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     fun onItemHeld(event: PlayerItemHeldEvent) {
         val player = event.player
+        
+        // Nur in aktivierten Welten
+        if (!plugin.worldTierManager.isEnabledWorld(player.world)) return
 
         // Entferne alte Custom-Haste-Effekte
         if (activeHasteEffects.containsKey(player.uniqueId)) {

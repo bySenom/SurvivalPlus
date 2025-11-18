@@ -4,11 +4,11 @@
 # WELT-EINSTELLUNGEN
 # ===================================
 # Plugin funktioniert nur in diesen Welten
-# HINWEIS: HubPlugin erstellt für jede Overworld entsprechende Nether/End Welten
+# WICHTIG: Exakte Namen der Survival-Welten
 enabled-worlds:
   - "Survival"           # Survival Overworld
-  - "Survival_nether"    # Survival Nether (automatisch von HubPlugin)
-  - "Survival_the_end"   # Survival End (automatisch von HubPlugin)
+  - "Survival_nether"    # Survival Nether
+  - "Survival_the_end"   # Survival End
 
 # ===================================
 # WORLD TIER SHRINES

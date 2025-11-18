@@ -20,6 +20,9 @@ class SkillListener(private val plugin: SurvivalPlus) : Listener {
     fun onEntityKill(event: EntityDeathEvent) {
         val killer = event.entity.killer ?: return
         val entity = event.entity
+        
+        // Nur in aktivierten Welten
+        if (!plugin.worldTierManager.isEnabledWorld(entity.world)) return
 
         // XP basierend auf Mob-Typ
         val xp = when (entity) {
@@ -45,6 +48,10 @@ class SkillListener(private val plugin: SurvivalPlus) : Listener {
         if (event.entity !is LivingEntity) return
 
         val player = event.damager as Player
+        
+        // Nur in aktivierten Welten
+        if (!plugin.worldTierManager.isEnabledWorld(player.world)) return
+        
         val damage = event.finalDamage
 
         // 1 XP pro 5 Schaden
@@ -59,6 +66,9 @@ class SkillListener(private val plugin: SurvivalPlus) : Listener {
     fun onBlockBreak(event: BlockBreakEvent) {
         val player = event.player
         val block = event.block
+        
+        // Nur in aktivierten Welten
+        if (!plugin.worldTierManager.isEnabledWorld(player.world)) return
 
         // XP basierend auf Block-Typ
         val xp = when (block.type) {
@@ -88,6 +98,9 @@ class SkillListener(private val plugin: SurvivalPlus) : Listener {
     fun onHarvest(event: PlayerHarvestBlockEvent) {
         val player = event.player
         val block = event.harvestedBlock
+        
+        // Nur in aktivierten Welten
+        if (!plugin.worldTierManager.isEnabledWorld(player.world)) return
 
         // XP basierend auf Pflanze
         val xp = when (block.type) {
@@ -113,6 +126,9 @@ class SkillListener(private val plugin: SurvivalPlus) : Listener {
         if (event.state != PlayerFishEvent.State.CAUGHT_FISH) return
 
         val player = event.player
+        
+        // Nur in aktivierten Welten
+        if (!plugin.worldTierManager.isEnabledWorld(player.world)) return
 
         // XP basierend auf Fang
         val caught = event.caught
