@@ -1,5 +1,8 @@
 package org.bysenom.survivalPlus.trading
 
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextColor
 import org.bysenom.survivalPlus.SurvivalPlus
 import org.bukkit.Bukkit
 import org.bukkit.Material
@@ -38,14 +41,16 @@ class TradingGUI(private val plugin: SurvivalPlus) : Listener {
         private const val SEPARATOR_SLOT = 4
         private const val CONFIRM_SLOT = 49
         private const val CANCEL_SLOT = 45
-        private const val INFO_SLOT = 13
+        private const val INFO_SLOT = 40
     }
 
     /**
      * Öffnet Trade GUI für Spieler
      */
     fun openTradeGUI(player: Player, partner: Player, trade: Trade) {
-        val inv = Bukkit.createInventory(null, GUI_SIZE, "§8Handel: §e${partner.name}")
+        val title = Component.text("Handel: ", TextColor.fromHexString("#3F3F3F"))
+            .append(Component.text(partner.name, NamedTextColor.YELLOW))
+        val inv = Bukkit.createInventory(null, GUI_SIZE, title)
         
         setupStaticItems(inv, player, partner, trade)
         updateTradeItems(inv, player, trade)
@@ -60,7 +65,7 @@ class TradingGUI(private val plugin: SurvivalPlus) : Listener {
         // Separator (Spalte 5)
         val separator = ItemStack(Material.GRAY_STAINED_GLASS_PANE)
         val separatorMeta = separator.itemMeta!!
-        separatorMeta.setDisplayName(" ")
+        separatorMeta.displayName(Component.text(" "))
         separator.itemMeta = separatorMeta
         
         for (i in 0 until 6) {
@@ -76,8 +81,8 @@ class TradingGUI(private val plugin: SurvivalPlus) : Listener {
         // Cancel Button
         val cancel = ItemStack(Material.RED_CONCRETE)
         val cancelMeta = cancel.itemMeta!!
-        cancelMeta.setDisplayName("§c§lABBRECHEN")
-        cancelMeta.lore = listOf("§7Handel abbrechen")
+        cancelMeta.displayName(Component.text("ABBRECHEN").color(NamedTextColor.RED).decorate(net.kyori.adventure.text.format.TextDecoration.BOLD))
+        cancelMeta.lore(listOf(Component.text("Handel abbrechen").color(NamedTextColor.GRAY)))
         cancel.itemMeta = cancelMeta
         inv.setItem(CANCEL_SLOT, cancel)
     }
@@ -101,10 +106,11 @@ class TradingGUI(private val plugin: SurvivalPlus) : Listener {
                 val display = item.clone()
                 val meta = display.itemMeta
                 if (meta != null) {
-                    val lore = meta.lore?.toMutableList() ?: mutableListOf()
-                    lore.add("")
-                    lore.add("§7Angebot von §e${plugin.server.getPlayer(trade.getPartner(player.uniqueId)!!)?.name}")
-                    meta.lore = lore
+                    val lore = meta.lore()?.toMutableList() ?: mutableListOf()
+                    lore.add(Component.empty())
+                    lore.add(Component.text("Angebot von ").color(NamedTextColor.GRAY)
+                        .append(Component.text(plugin.server.getPlayer(trade.getPartner(player.uniqueId)!!)?.name ?: "?").color(NamedTextColor.YELLOW)))
+                    meta.lore(lore)
                     display.itemMeta = meta
                 }
                 inv.setItem(slot, display)
@@ -120,25 +126,30 @@ class TradingGUI(private val plugin: SurvivalPlus) : Listener {
     private fun updateInfoItem(inv: Inventory, player: Player, partner: Player, trade: Trade) {
         val info = ItemStack(Material.PAPER)
         val infoMeta = info.itemMeta!!
-        infoMeta.setDisplayName("§6§lHandel Info")
+        infoMeta.displayName(Component.text("Handel Info").color(NamedTextColor.GOLD).decorate(net.kyori.adventure.text.format.TextDecoration.BOLD))
         
         val myConfirmed = trade.isConfirmed(player.uniqueId)
         val partnerConfirmed = trade.isConfirmed(trade.getPartner(player.uniqueId)!!)
         
-        infoMeta.lore = listOf(
-            "",
-            "§7Dein Status: ${if (myConfirmed) "§a✓ Bestätigt" else "§c✗ Nicht bestätigt"}",
-            "§7${partner.name}: ${if (partnerConfirmed) "§a✓ Bestätigt" else "§c✗ Nicht bestätigt"}",
-            "",
-            "§7Lege Items in die §elinken Slots§7,",
-            "§7um sie zu handeln.",
-            "",
+        infoMeta.lore(listOf(
+            Component.empty(),
+            Component.text("Dein Status: ").color(NamedTextColor.GRAY)
+                .append(Component.text(if (myConfirmed) "✓ Bestätigt" else "✗ Nicht bestätigt").color(if (myConfirmed) NamedTextColor.GREEN else NamedTextColor.RED)),
+            Component.text("${partner.name}: ").color(NamedTextColor.GRAY)
+                .append(Component.text(if (partnerConfirmed) "✓ Bestätigt" else "✗ Nicht bestätigt").color(if (partnerConfirmed) NamedTextColor.GREEN else NamedTextColor.RED)),
+            Component.empty(),
+            Component.text("Lege Items in die ").color(NamedTextColor.GRAY)
+                .append(Component.text("linken Slots").color(NamedTextColor.YELLOW))
+                .append(Component.text(",").color(NamedTextColor.GRAY)),
+            Component.text("um sie zu handeln.").color(NamedTextColor.GRAY),
+            Component.empty(),
             if (myConfirmed && partnerConfirmed) {
-                "§a§lHandel wird ausgeführt..."
+                Component.text("Handel wird ausgeführt...").color(NamedTextColor.GREEN).decorate(net.kyori.adventure.text.format.TextDecoration.BOLD)
             } else {
-                "§7Bestätige mit dem §aGrünen Button"
+                Component.text("Bestätige mit dem ").color(NamedTextColor.GRAY)
+                    .append(Component.text("Grünen Button").color(NamedTextColor.GREEN))
             }
-        )
+        ))
         info.itemMeta = infoMeta
         inv.setItem(INFO_SLOT, info)
     }
@@ -151,20 +162,21 @@ class TradingGUI(private val plugin: SurvivalPlus) : Listener {
         
         val button = ItemStack(if (confirmed) Material.LIME_CONCRETE else Material.GREEN_CONCRETE)
         val buttonMeta = button.itemMeta!!
-        buttonMeta.setDisplayName(if (confirmed) "§a§lBESTÄTIGT" else "§a§lBESTÄTIGEN")
-        buttonMeta.lore = if (confirmed) {
+        buttonMeta.displayName(Component.text(if (confirmed) "BESTÄTIGT" else "BESTÄTIGEN").color(NamedTextColor.GREEN).decorate(net.kyori.adventure.text.format.TextDecoration.BOLD))
+        buttonMeta.lore(if (confirmed) {
             listOf(
-                "§7Du hast den Handel bestätigt.",
-                "§7Warte auf §e${plugin.server.getPlayer(trade.getPartner(player.uniqueId)!!)?.name}",
-                "",
-                "§cKlicke erneut um abzubrechen"
+                Component.text("Du hast den Handel bestätigt.").color(NamedTextColor.GRAY),
+                Component.text("Warte auf ").color(NamedTextColor.GRAY)
+                    .append(Component.text(plugin.server.getPlayer(trade.getPartner(player.uniqueId)!!)?.name ?: "?").color(NamedTextColor.YELLOW)),
+                Component.empty(),
+                Component.text("Klicke erneut um abzubrechen").color(NamedTextColor.RED)
             )
         } else {
             listOf(
-                "§7Bestätige den Handel.",
-                "§cÄnderungen setzen die Bestätigung zurück!"
+                Component.text("Bestätige den Handel.").color(NamedTextColor.GRAY),
+                Component.text("Änderungen setzen die Bestätigung zurück!").color(NamedTextColor.RED)
             )
-        }
+        })
         button.itemMeta = buttonMeta
         inv.setItem(CONFIRM_SLOT, button)
     }
@@ -215,14 +227,16 @@ class TradingGUI(private val plugin: SurvivalPlus) : Listener {
             
             when {
                 // Item platzieren
-                event.cursor != null && event.cursor!!.type != Material.AIR -> {
-                    trade.setItem(player.uniqueId, slotIndex, event.cursor)
+                event.cursor.type != Material.AIR -> {
+                    val cursorItem = event.cursor.clone()
+                    trade.setItem(player.uniqueId, slotIndex, cursorItem)
                     player.setItemOnCursor(null)
                 }
                 // Item entfernen
                 clickedItem != null && clickedItem.type != Material.AIR -> {
+                    val removedItem = clickedItem.clone()
                     trade.setItem(player.uniqueId, slotIndex, null)
-                    player.setItemOnCursor(clickedItem)
+                    player.setItemOnCursor(removedItem)
                 }
             }
             

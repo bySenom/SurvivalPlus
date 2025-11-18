@@ -84,17 +84,18 @@ class EnchantmentListener(private val plugin: SurvivalPlus) : Listener {
 
     private fun handleLifesteal(player: Player, damage: Double, level: Int) {
         val healAmount = damage * CustomEnchantment.LIFESTEAL.getEffectValue(level)
-        val newHealth = min(player.health + healAmount, player.maxHealth)
+        val maxHealth = player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH)?.value ?: 20.0
+        val newHealth = min(player.health + healAmount, maxHealth)
         player.health = newHealth
 
         // Visual Feedback
         player.sendActionBar(net.kyori.adventure.text.Component.text("+${String.format("%.1f", healAmount)} ❤")
             .color(net.kyori.adventure.text.format.NamedTextColor.RED))
     }
-
     private fun handleVampire(player: Player, damage: Double, level: Int) {
         val healAmount = damage * CustomEnchantment.VAMPIRE.getEffectValue(level)
-        val newHealth = min(player.health + healAmount, player.maxHealth)
+        val maxHealth = player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH)?.value ?: 20.0
+        val newHealth = min(player.health + healAmount, maxHealth)
         player.health = newHealth
     }
 
