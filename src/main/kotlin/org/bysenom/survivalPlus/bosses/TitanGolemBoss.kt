@@ -16,15 +16,18 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 
 /**
- * Titan Golem - Team-basierter World Boss
+ * Titan Golem - Team-basierter World Boss mit Intermission-Phasen
  * 
  * Benötigt Zusammenspiel: Tanks (aggro), DPS (damage), Support (healing/buffs)
  * 
  * Phasen:
- * 1. Phase (100-75%): Basic Attacks, Stomp AOE
- * 2. Phase (75-50%): Summon Minions, Boulder Throw
- * 3. Phase (50-25%): Enrage, Ground Slam, Shields
- * 4. Phase (25-0%): Berserk Mode, alle Abilities kombiniert
+ * 1. Phase (100-80%): Basic Attacks, Stomp AOE
+ * 2. INTERMISSION 1 (80%): Invulnerable, 3 Healing Towers spawnen, müssen zerstört werden
+ * 3. Phase (80-60%): Boulder Throw, Ground Slam
+ * 4. Phase (60-40%): Summon Minions, Enrage
+ * 5. INTERMISSION 2 (40%): Invulnerable, 4 Healing Towers + Reinforced Shield
+ * 6. Phase (40-20%): Alle Abilities kombiniert
+ * 7. Phase (20-0%): Berserk Mode, schnellere Abilities
  */
 class TitanGolemBoss(private val plugin: SurvivalPlus) {
 
@@ -43,7 +46,10 @@ class TitanGolemBoss(private val plugin: SurvivalPlus) {
         var lastAbilityTime: Long = 0,
         val aggroMap: MutableMap<UUID, Double> = mutableMapOf(),
         var shieldActive: Boolean = false,
-        var shieldHealth: Double = 0.0
+        var shieldHealth: Double = 0.0,
+        var isIntermission: Boolean = false,
+        val healingTowers: MutableList<ArmorStand> = mutableListOf(),
+        var beamTask: BukkitRunnable? = null
     )
 
     private val activeBosses = ConcurrentHashMap<UUID, BossData>()
@@ -179,13 +185,33 @@ class TitanGolemBoss(private val plugin: SurvivalPlus) {
             return
         }
 
-        // Phase-Check
+        // Intermission prüfen
+        if (data.isIntermission) {
+            updateIntermission(data)
+            return
+        }
+
+        // Phase-Check mit Intermissions
         val healthPercent = (boss.health / boss.getAttribute(Attribute.MAX_HEALTH)!!.value) * 100
+        
+        // Intermission 1 bei 80%
+        if (healthPercent <= 80 && data.currentPhase == 1) {
+            startIntermission(data, 1)
+            return
+        }
+        
+        // Intermission 2 bei 40%
+        if (healthPercent <= 40 && data.currentPhase == 3) {
+            startIntermission(data, 2)
+            return
+        }
+        
         val newPhase = when {
-            healthPercent > 75 -> 1
-            healthPercent > 50 -> 2
-            healthPercent > 25 -> 3
-            else -> 4
+            healthPercent > 80 -> 1
+            healthPercent > 60 -> 2
+            healthPercent > 40 -> 3
+            healthPercent > 20 -> 4
+            else -> 5 // Berserk
         }
 
         if (newPhase != data.currentPhase) {
@@ -234,20 +260,224 @@ class TitanGolemBoss(private val plugin: SurvivalPlus) {
         when (newPhase) {
             2 -> {
                 boss.world.spawnParticle(Particle.ANGRY_VILLAGER, boss.location, 20, 1.0, 1.0, 1.0)
-                summonMinions(data, 3)
+                boss.world.spawnParticle(Particle.CRIT, boss.location, 50, 2.0, 2.0, 2.0, 0.2)
             }
             3 -> {
                 boss.addPotionEffect(PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 0, false, false))
                 boss.world.spawnParticle(Particle.FLAME, boss.location, 50, 2.0, 2.0, 2.0, 0.1)
+                summonMinions(data, 3)
             }
             4 -> {
-                boss.addPotionEffect(PotionEffect(PotionEffectType.STRENGTH, Integer.MAX_VALUE, 1, false, false))
+                boss.addPotionEffect(PotionEffect(PotionEffectType.STRENGTH, Integer.MAX_VALUE, 0, false, false))
                 boss.addPotionEffect(PotionEffect(PotionEffectType.RESISTANCE, Integer.MAX_VALUE, 0, false, false))
-                boss.world.spawnParticle(Particle.LAVA, boss.location, 100, 3.0, 2.0, 3.0)
+                boss.world.spawnParticle(Particle.LAVA, boss.location, 80, 2.5, 2.0, 2.5)
+            }
+            5 -> {
+                // Berserk Mode
+                boss.addPotionEffect(PotionEffect(PotionEffectType.STRENGTH, Integer.MAX_VALUE, 1, false, false))
+                boss.addPotionEffect(PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1, false, false))
+                boss.addPotionEffect(PotionEffect(PotionEffectType.RESISTANCE, Integer.MAX_VALUE, 1, false, false))
+                boss.world.spawnParticle(Particle.EXPLOSION, boss.location, 100, 3.0, 2.0, 3.0)
+                boss.world.spawnParticle(Particle.DRAGON_BREATH, boss.location, 150, 3.0, 2.0, 3.0, 0.1)
+                summonMinions(data, 5)
             }
         }
 
         plugin.logger.info("Titan Golem Phase $newPhase")
+    }
+
+    /**
+     * Startet Intermission-Phase mit Healing Towers
+     */
+    private fun startIntermission(data: BossData, intermissionNumber: Int) {
+        val boss = data.boss
+        data.isIntermission = true
+        
+        // Boss invulnerable
+        boss.isInvulnerable = true
+        
+        // Broadcast
+        boss.world.players.forEach { player ->
+            if (player.location.distance(boss.location) <= 100) {
+                player.sendMessage(
+                    Component.text("💎 INTERMISSION $intermissionNumber 💎").color(NamedTextColor.AQUA)
+                        .append(Component.text("\nZerstöre die Heilungs-Türme!").color(NamedTextColor.YELLOW))
+                )
+                player.playSound(player.location, Sound.BLOCK_BEACON_ACTIVATE, 2f, 0.8f)
+            }
+        }
+        
+        // Spawn Healing Towers
+        val towerCount = if (intermissionNumber == 1) 3 else 4
+        spawnHealingTowers(data, towerCount)
+        
+        // Start Beam-Effekt
+        startHealingBeams(data)
+        
+        plugin.logger.info("Titan Golem Intermission $intermissionNumber gestartet")
+    }
+
+    /**
+     * Spawnt Healing Towers um den Boss herum
+     */
+    private fun spawnHealingTowers(data: BossData, count: Int) {
+        val boss = data.boss
+        val centerLoc = boss.location
+        val radius = 15.0
+        
+        for (i in 0 until count) {
+            val angle = (360.0 / count) * i
+            val radians = Math.toRadians(angle)
+            val x = centerLoc.x + radius * Math.cos(radians)
+            val z = centerLoc.z + radius * Math.sin(radians)
+            
+            val towerLoc = Location(centerLoc.world, x, centerLoc.y, z)
+            
+            // Finde Boden
+            var groundY = towerLoc.blockY
+            while (groundY > centerLoc.blockY - 10 && towerLoc.world!!.getBlockAt(towerLoc.blockX, groundY, towerLoc.blockZ).type.isAir) {
+                groundY--
+            }
+            towerLoc.y = groundY + 1.0
+            
+            // Spawn Tower (ArmorStand mit Block)
+            val tower = centerLoc.world!!.spawn(towerLoc, ArmorStand::class.java) { stand ->
+                stand.isVisible = false
+                stand.isInvulnerable = false
+                stand.customName(Component.text("Heilungs-Turm").color(NamedTextColor.GREEN))
+                stand.isCustomNameVisible = true
+                stand.setGravity(false)
+                
+                // Marker für Healing Tower
+                stand.persistentDataContainer.set(
+                    org.bukkit.NamespacedKey(plugin, "healing_tower"),
+                    org.bukkit.persistence.PersistentDataType.STRING,
+                    boss.uniqueId.toString()
+                )
+                
+                // Health basierend auf World Tier
+                val towerHealth = 100.0 + (data.worldTier * 50.0)
+                stand.health = towerHealth
+                stand.getAttribute(Attribute.MAX_HEALTH)?.baseValue = towerHealth
+            }
+            
+            // Platziere End Rod Block als visuelle Darstellung
+            val blockLoc = towerLoc.clone().add(0.0, 0.5, 0.0)
+            blockLoc.block.type = Material.END_ROD
+            
+            data.healingTowers.add(tower)
+            
+            // Spawn-Effekt
+            towerLoc.world!!.spawnParticle(Particle.TOTEM_OF_UNDYING, towerLoc, 50, 0.5, 1.0, 0.5, 0.1)
+            towerLoc.world!!.playSound(towerLoc, Sound.BLOCK_BEACON_POWER_SELECT, 1f, 1.2f)
+        }
+        
+        plugin.logger.info("Spawned $count Healing Towers für Titan Golem")
+    }
+
+    /**
+     * Startet Beam-Effekt zwischen Türmen und Boss
+     */
+    private fun startHealingBeams(data: BossData) {
+        data.beamTask?.cancel()
+        
+        data.beamTask = object : BukkitRunnable() {
+            override fun run() {
+                if (!data.boss.isValid || !data.isIntermission) {
+                    cancel()
+                    return
+                }
+                
+                data.healingTowers.removeIf { !it.isValid }
+                
+                if (data.healingTowers.isEmpty()) {
+                    // Alle Türme zerstört - Intermission beenden
+                    endIntermission(data)
+                    cancel()
+                    return
+                }
+                
+                // Beam-Partikel von jedem Turm zum Boss
+                data.healingTowers.forEach { tower ->
+                    if (tower.isValid) {
+                        drawBeam(tower.location.clone().add(0.0, 1.0, 0.0), data.boss.location.clone().add(0.0, 1.5, 0.0))
+                        
+                        // Boss heilen (pro Turm)
+                        val healAmount = 2.0
+                        val maxHealth = data.boss.getAttribute(Attribute.MAX_HEALTH)!!.value
+                        if (data.boss.health < maxHealth) {
+                            data.boss.health = minOf(data.boss.health + healAmount, maxHealth)
+                        }
+                    }
+                }
+            }
+        }.apply { runTaskTimer(plugin, 0L, 10L) } // Alle 0.5 Sekunden
+    }
+
+    /**
+     * Zeichnet Beam-Partikel zwischen zwei Punkten
+     */
+    private fun drawBeam(from: Location, to: Location) {
+        val distance = from.distance(to)
+        val direction = to.toVector().subtract(from.toVector()).normalize()
+        
+        for (i in 0 until (distance * 2).toInt()) {
+            val point = from.clone().add(direction.clone().multiply(i * 0.5))
+            from.world?.spawnParticle(Particle.END_ROD, point, 1, 0.0, 0.0, 0.0, 0.0)
+            if (i % 3 == 0) {
+                from.world?.spawnParticle(Particle.FIREWORK, point, 1, 0.1, 0.1, 0.1, 0.0)
+            }
+        }
+    }
+
+    /**
+     * Update während Intermission
+     */
+    private fun updateIntermission(data: BossData) {
+        // Entferne invalide Türme
+        data.healingTowers.removeIf { !it.isValid }
+        
+        // Prüfe ob alle Türme zerstört
+        if (data.healingTowers.isEmpty()) {
+            endIntermission(data)
+        }
+    }
+
+    /**
+     * Beendet Intermission-Phase
+     */
+    private fun endIntermission(data: BossData) {
+        data.isIntermission = false
+        data.boss.isInvulnerable = false
+        
+        // Stoppe Beam-Task
+        data.beamTask?.cancel()
+        data.beamTask = null
+        
+        // Cleanup Türme
+        data.healingTowers.forEach { tower ->
+            if (tower.isValid) {
+                tower.location.block.type = Material.AIR
+                tower.remove()
+            }
+        }
+        data.healingTowers.clear()
+        
+        // Broadcast
+        data.boss.world.players.forEach { player ->
+            if (player.location.distance(data.boss.location) <= 100) {
+                player.sendMessage(
+                    Component.text("✓ Intermission beendet!").color(NamedTextColor.GREEN)
+                        .append(Component.text("\nDer Kampf geht weiter!").color(NamedTextColor.YELLOW))
+                )
+                player.playSound(player.location, Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f)
+            }
+        }
+        
+        // Phase hochzählen
+        data.currentPhase++
+        
+        plugin.logger.info("Titan Golem Intermission beendet, Phase ${data.currentPhase}")
     }
 
     /**
@@ -256,15 +486,25 @@ class TitanGolemBoss(private val plugin: SurvivalPlus) {
     private fun executePhaseAbility(data: BossData) {
         when (data.currentPhase) {
             1 -> abilityGroundStomp(data)
-            2 -> if (Random.nextBoolean()) abilityBoulderThrow(data) else summonMinions(data, 2)
-            3 -> if (Random.nextBoolean()) abilityGroundSlam(data) else abilityActivateShield(data)
+            2 -> if (Random.nextBoolean()) abilityBoulderThrow(data) else abilityGroundStomp(data)
+            3 -> if (Random.nextBoolean()) abilityGroundSlam(data) else summonMinions(data, 2)
             4 -> {
-                // Kombiniere alle Abilities
+                // Alle Abilities kombiniert
                 when (Random.nextInt(4)) {
                     0 -> abilityGroundStomp(data)
                     1 -> abilityBoulderThrow(data)
                     2 -> abilityGroundSlam(data)
-                    3 -> summonMinions(data, 4)
+                    3 -> abilityActivateShield(data)
+                }
+            }
+            5 -> {
+                // Berserk: Schnellere Abilities, Minions spawnen
+                when (Random.nextInt(5)) {
+                    0 -> abilityGroundStomp(data)
+                    1 -> abilityBoulderThrow(data)
+                    2 -> abilityGroundSlam(data)
+                    3 -> abilityActivateShield(data)
+                    4 -> summonMinions(data, 4)
                 }
             }
         }
@@ -442,6 +682,7 @@ class TitanGolemBoss(private val plugin: SurvivalPlus) {
             2 -> 6000L  // 6 Sekunden
             3 -> 5000L  // 5 Sekunden
             4 -> 4000L  // 4 Sekunden
+            5 -> 3000L  // 3 Sekunden (Berserk)
             else -> 8000L
         }
     }
@@ -451,6 +692,18 @@ class TitanGolemBoss(private val plugin: SurvivalPlus) {
      */
     fun cleanupBoss(bossUUID: UUID) {
         val data = activeBosses.remove(bossUUID) ?: return
+        
+        // Stoppe Beam-Task
+        data.beamTask?.cancel()
+        
+        // Cleanup Healing Towers
+        data.healingTowers.forEach { tower ->
+            if (tower.isValid) {
+                tower.location.block.type = Material.AIR
+                tower.remove()
+            }
+        }
+        data.healingTowers.clear()
         
         // Verstecke Boss Bar
         data.boss.world.players.forEach { player ->

@@ -218,6 +218,7 @@ class SurvivalPlus : JavaPlugin() {
         server.pluginManager.registerEvents(tradingGUI, this)
         server.pluginManager.registerEvents(org.bysenom.survivalPlus.trading.TradingListener(this), this)
         server.pluginManager.registerEvents(customOreManager, this) // Ore Generation
+        server.pluginManager.registerEvents(org.bysenom.survivalPlus.listeners.BossListener(this), this) // Boss Events
 
         // Rezepte registrieren
         customBlockRecipes.registerRecipes()
