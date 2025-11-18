@@ -147,7 +147,7 @@ class QualityPlateManager(private val plugin: SurvivalPlus) : Listener {
                 armorStand.scoreboardTags.any { it.startsWith("task_") }
             }
             .forEach { hologram ->
-                // Finde das Item für dieses Hologramm
+                // Find das Item für dieses Hologramm
                 val itemUuid = itemHolograms.entries
                     .find { it.value == hologram }
                     ?.key

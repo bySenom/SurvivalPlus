@@ -30,6 +30,21 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class HarvesterBoss(private val plugin: SurvivalPlus) {
 
+    /**
+     * Boss Data Class
+     */
+    data class BossData(
+        val boss: WitherSkeleton,
+        val worldTier: Int,
+        var phase: Int,
+        val spawnLocation: Location,
+        var lastBlazeSummon: Long,
+        var lastFireWave: Long,
+        var lastLavaPool: Long,
+        var aiTask: BukkitTask? = null,
+        var bossBar: BossBar? = null
+    )
+
     private val activeBosses = ConcurrentHashMap<WitherSkeleton, BossData>()
     private val bossBarKey = NamespacedKey(plugin, "harvester_boss")
 
@@ -63,7 +78,7 @@ class HarvesterBoss(private val plugin: SurvivalPlus) {
         
         // Setup Boss
         setupBossEntity(boss, worldTier)
-        val bossBar = setupBossBar(boss, worldTier)
+        val bossBar = setupBossBar(worldTier)
         
         // Boss Data
         val data = BossData(
@@ -131,7 +146,7 @@ class HarvesterBoss(private val plugin: SurvivalPlus) {
     /**
      * Setup Boss Bar
      */
-    private fun setupBossBar(boss: WitherSkeleton, worldTier: Int): BossBar {
+    private fun setupBossBar(worldTier: Int): BossBar {
         val bossBar = Bukkit.createBossBar(
             "§6§lDer Ernter §8(Tier $worldTier) §c❤",
             BarColor.RED,
@@ -185,24 +200,22 @@ class HarvesterBoss(private val plugin: SurvivalPlus) {
         }
         
         if (newPhase != data.phase) {
-            val oldPhase = data.phase
             data.phase = newPhase
-            onPhaseChange(data, oldPhase, newPhase)
+            onPhaseChange(data, newPhase)
         }
     }
 
     /**
      * Phase Change Handler
      */
-    private fun onPhaseChange(data: BossData, oldPhase: Int, newPhase: Int) {
-        val boss = data.boss
-        val location = boss.location
+    private fun onPhaseChange(data: BossData, newPhase: Int) {
+        val location = data.boss.location
         
         when (newPhase) {
             2 -> {
                 // Phase 2: Fire Waves aktiviert
-                announcePhase(location, 2, "§6Der Ernter entfesselt Feuerwellen!")
-                boss.addPotionEffect(PotionEffect(PotionEffectType.SPEED, Int.MAX_VALUE, 1, false, false))
+                announcePhase(location, "§6Der Ernter entfesselt Feuerwellen!")
+                data.boss.addPotionEffect(PotionEffect(PotionEffectType.SPEED, Int.MAX_VALUE, 1, false, false))
                 
                 // Visual Effect
                 location.world?.spawnParticle(Particle.LAVA, location, 100, 3.0, 3.0, 3.0, 0.1)
@@ -210,8 +223,8 @@ class HarvesterBoss(private val plugin: SurvivalPlus) {
             }
             3 -> {
                 // Phase 3: Lava Pools aktiviert
-                announcePhase(location, 3, "§cDer Ernter beschwört Lava-Becken!")
-                boss.addPotionEffect(PotionEffect(PotionEffectType.STRENGTH, Int.MAX_VALUE, 1, false, false))
+                announcePhase(location, "§cDer Ernter beschwört Lava-Becken!")
+                data.boss.addPotionEffect(PotionEffect(PotionEffectType.STRENGTH, Int.MAX_VALUE, 1, false, false))
                 
                 // Visual Effect
                 location.world?.spawnParticle(Particle.FLAME, location, 200, 5.0, 5.0, 5.0, 0.2)
@@ -219,10 +232,10 @@ class HarvesterBoss(private val plugin: SurvivalPlus) {
             }
             4 -> {
                 // Phase 4: Berserk Mode
-                announcePhase(location, 4, "§4§lDER ERNTER IST RASEND!")
-                boss.addPotionEffect(PotionEffect(PotionEffectType.SPEED, Int.MAX_VALUE, 2, false, false))
-                boss.addPotionEffect(PotionEffect(PotionEffectType.STRENGTH, Int.MAX_VALUE, 2, false, false))
-                boss.addPotionEffect(PotionEffect(PotionEffectType.RESISTANCE, Int.MAX_VALUE, 1, false, false))
+                announcePhase(location, "§4§lDER ERNTER IST RASEND!")
+                data.boss.addPotionEffect(PotionEffect(PotionEffectType.SPEED, Int.MAX_VALUE, 2, false, false))
+                data.boss.addPotionEffect(PotionEffect(PotionEffectType.STRENGTH, Int.MAX_VALUE, 2, false, false))
+                data.boss.addPotionEffect(PotionEffect(PotionEffectType.RESISTANCE, Int.MAX_VALUE, 1, false, false))
                 
                 // Visual Effect
                 location.world?.spawnParticle(Particle.SOUL_FIRE_FLAME, location, 300, 8.0, 8.0, 8.0, 0.3)
@@ -236,7 +249,6 @@ class HarvesterBoss(private val plugin: SurvivalPlus) {
      */
     private fun executeAbilities(data: BossData) {
         val now = System.currentTimeMillis()
-        val boss = data.boss
         
         // Phase 1+: Blaze Summons
         if (now - data.lastBlazeSummon > BLAZE_SUMMON_COOLDOWN * 50) {
@@ -319,7 +331,7 @@ class HarvesterBoss(private val plugin: SurvivalPlus) {
                 // Damage nearby players
                 location.world?.getNearbyEntities(particleLoc, 1.5, 2.0, 1.5)?.forEach { entity ->
                     if (entity is Player) {
-                        entity.damage(5.0 * data.worldTier, boss)
+                        entity.damage(5.0 * data.worldTier, data.boss)
                         entity.fireTicks = 60
                     }
                 }
@@ -337,8 +349,7 @@ class HarvesterBoss(private val plugin: SurvivalPlus) {
      * Create Lava Pool
      */
     private fun createLavaPool(data: BossData) {
-        val boss = data.boss
-        val target = boss.target as? Player ?: return
+        val target = data.boss.target as? Player ?: return
         val location = target.location
         
         // Create temporary lava pool
@@ -370,7 +381,7 @@ class HarvesterBoss(private val plugin: SurvivalPlus) {
                 // Damage entities in zone
                 loc.world?.getNearbyEntities(loc, 1.0, 2.0, 1.0)?.forEach { entity ->
                     if (entity is Player) {
-                        entity.damage(10.0 * data.worldTier, boss)
+                        entity.damage(10.0 * data.worldTier, data.boss)
                         entity.fireTicks = 100
                     }
                 }
@@ -451,14 +462,13 @@ class HarvesterBoss(private val plugin: SurvivalPlus) {
      */
     private fun dropLoot(data: BossData) {
         val location = data.boss.location
-        val tierMultiplier = 1.0 + (data.worldTier - 1) * 0.3
         
-        // Guaranteed Drops
+        // Guaranteed Drops (scale with world tier)
         val guaranteedDrops = listOf(
-            ItemStack(Material.NETHERITE_SCRAP, (2..5).random()),
-            ItemStack(Material.BLAZE_ROD, (5..10).random()),
-            ItemStack(Material.MAGMA_CREAM, (10..20).random()),
-            ItemStack(Material.FIRE_CHARGE, (5..15).random())
+            ItemStack(Material.NETHERITE_SCRAP, ((2..5).random() * (1.0 + (data.worldTier - 1) * 0.3)).toInt().coerceAtLeast(1)),
+            ItemStack(Material.BLAZE_ROD, ((5..10).random() * (1.0 + (data.worldTier - 1) * 0.3)).toInt().coerceAtLeast(1)),
+            ItemStack(Material.MAGMA_CREAM, ((10..20).random() * (1.0 + (data.worldTier - 1) * 0.3)).toInt().coerceAtLeast(1)),
+            ItemStack(Material.FIRE_CHARGE, ((5..15).random() * (1.0 + (data.worldTier - 1) * 0.3)).toInt().coerceAtLeast(1))
         )
         
         guaranteedDrops.forEach { item ->
@@ -550,7 +560,7 @@ class HarvesterBoss(private val plugin: SurvivalPlus) {
     /**
      * Announce Phase Change
      */
-    private fun announcePhase(location: Location, phase: Int, message: String) {
+    private fun announcePhase(location: Location, message: String) {
         val world = location.world ?: return
         world.getNearbyEntities(location, 50.0, 50.0, 50.0)
             .filterIsInstance<Player>()
@@ -573,32 +583,6 @@ class HarvesterBoss(private val plugin: SurvivalPlus) {
             .build()
         
         world.players.forEach { it.sendMessage(message) }
+        world.playSound(location, Sound.ENTITY_WITHER_DEATH, 1f, 0.5f)
     }
-
-    /**
-     * Cleanup
-     */
-    fun cleanup() {
-        activeBosses.values.forEach { data ->
-            data.aiTask?.cancel()
-            data.bossBar?.removeAll()
-            data.boss.remove()
-        }
-        activeBosses.clear()
-    }
-
-    /**
-     * Boss Data Class
-     */
-    data class BossData(
-        val boss: WitherSkeleton,
-        val worldTier: Int,
-        var phase: Int,
-        val spawnLocation: Location,
-        var lastBlazeSummon: Long,
-        var lastFireWave: Long,
-        var lastLavaPool: Long,
-        var aiTask: BukkitTask? = null,
-        var bossBar: BossBar? = null
-    )
 }

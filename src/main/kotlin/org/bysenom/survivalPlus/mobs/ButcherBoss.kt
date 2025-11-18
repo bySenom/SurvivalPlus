@@ -284,7 +284,7 @@ class ButcherBoss(private val plugin: SurvivalPlus) {
             player.playSound(player.location, Sound.ENTITY_ENDER_DRAGON_GROWL, 1f, 0.5f)
         }
 
-        // Effekt
+        // Effect
         butcher.location.world.spawnParticle(
             Particle.ANGRY_VILLAGER,
             butcher.location.clone().add(0.0, 2.0, 0.0),
@@ -375,7 +375,7 @@ class ButcherBoss(private val plugin: SurvivalPlus) {
     }
 
     /**
-     * Wendet Bleed-Effekt an
+     * Wendet Bleed-Effect an
      */
     fun applyBleed(player: Player) {
         if (Random.nextDouble() < BLEED_CHANCE) {

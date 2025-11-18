@@ -168,7 +168,7 @@ class AchievementManager(private val plugin: SurvivalPlus) {
     private fun checkRequirement(player: Player, achievement: Achievement): Boolean {
         return when (val req = achievement.requirement) {
             is ItemQualityRequirement -> {
-                // Wird manuell getriggert wenn Item erhalten wird
+                // Wird manual getriggert wenn Item erhalten wird
                 false
             }
             is CountRequirement -> {

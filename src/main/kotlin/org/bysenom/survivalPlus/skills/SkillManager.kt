@@ -31,7 +31,7 @@ class SkillManager(private val plugin: SurvivalPlus) {
             handleLevelUp(player, skill, oldLevel, skillData.level)
         } else {
             // Zeige XP-Fortschritt
-            showXPGain(player, skill, amount, skillData)
+            showXPGain(player, skill, amount)
         }
     }
 
@@ -86,7 +86,7 @@ class SkillManager(private val plugin: SurvivalPlus) {
     /**
      * Zeige XP-Gewinn ohne Level-Up
      */
-    private fun showXPGain(player: Player, skill: Skill, xpGained: Int, skillData: SkillData) {
+    private fun showXPGain(player: Player, skill: Skill, xpGained: Int) {
         player.sendActionBar(
             Component.text("${skill.displayName}: +${xpGained} XP")
                 .color(skill.color)
@@ -139,6 +139,7 @@ class SkillManager(private val plugin: SurvivalPlus) {
     /**
      * Cleanup beim Logout
      */
+    @Suppress("UNUSED_PARAMETER")
     fun cleanup(player: Player) {
         // Skills werden gecacht, kein Cleanup nötig
         // In Zukunft: Speichern in Datenbank

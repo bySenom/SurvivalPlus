@@ -65,7 +65,7 @@ class FrostTitanBoss(private val plugin: SurvivalPlus) {
         
         // Setup Boss
         setupBossEntity(boss, worldTier)
-        val bossBar = setupBossBar(boss, worldTier)
+        val bossBar = setupBossBar(worldTier)
         
         // Boss Data
         val data = BossData(
@@ -125,7 +125,7 @@ class FrostTitanBoss(private val plugin: SurvivalPlus) {
     /**
      * Setup Boss Bar
      */
-    private fun setupBossBar(boss: IronGolem, worldTier: Int): BossBar {
+    private fun setupBossBar(worldTier: Int): BossBar {
         val bossBar = Bukkit.createBossBar(
             "§b§lFrost-Titan §8(Tier $worldTier) §c❤",
             BarColor.BLUE,
@@ -191,6 +191,7 @@ class FrostTitanBoss(private val plugin: SurvivalPlus) {
     /**
      * Phase Change Handler
      */
+    @Suppress("UNUSED_PARAMETER")
     private fun onPhaseChange(data: BossData, oldPhase: Int, newPhase: Int) {
         val boss = data.boss
         val location = boss.location
@@ -198,7 +199,7 @@ class FrostTitanBoss(private val plugin: SurvivalPlus) {
         when (newPhase) {
             2 -> {
                 // Phase 2: Frost Aura aktiviert
-                announcePhase(location, 2, "§bDer Frost-Titan entfesselt seine eisige Aura!")
+                announcePhase(location, "§bDer Frost-Titan entfesselt seine eisige Aura!")
                 boss.addPotionEffect(PotionEffect(PotionEffectType.SPEED, Int.MAX_VALUE, 0, false, false))
                 
                 // Visual Effect
@@ -207,7 +208,7 @@ class FrostTitanBoss(private val plugin: SurvivalPlus) {
             }
             3 -> {
                 // Phase 3: Blizzard aktiviert
-                announcePhase(location, 3, "§3Ein eisiger Blizzard bricht herein!")
+                announcePhase(location, "§3Ein eisiger Blizzard bricht herein!")
                 boss.addPotionEffect(PotionEffect(PotionEffectType.RESISTANCE, Int.MAX_VALUE, 2, false, false))
                 
                 // Visual Effect
@@ -216,7 +217,7 @@ class FrostTitanBoss(private val plugin: SurvivalPlus) {
             }
             4 -> {
                 // Phase 4: Absolute Zero
-                announcePhase(location, 4, "§9§lABSOLUTER NULLPUNKT!")
+                announcePhase(location, "§9§lABSOLUTER NULLPUNKT!")
                 boss.addPotionEffect(PotionEffect(PotionEffectType.SPEED, Int.MAX_VALUE, 1, false, false))
                 boss.addPotionEffect(PotionEffect(PotionEffectType.RESISTANCE, Int.MAX_VALUE, 3, false, false))
                 
@@ -232,7 +233,6 @@ class FrostTitanBoss(private val plugin: SurvivalPlus) {
      */
     private fun executeAbilities(data: BossData) {
         val now = System.currentTimeMillis()
-        val boss = data.boss
         
         // Phase 1+: Ice Spike Summons
         if (now - data.lastIceSpike > ICE_SPIKE_COOLDOWN * 50) {
@@ -306,8 +306,7 @@ class FrostTitanBoss(private val plugin: SurvivalPlus) {
      * Cast Frost Aura
      */
     private fun castFrostAura(data: BossData) {
-        val boss = data.boss
-        val location = boss.location
+        val location = data.boss.location
         val radius = 10.0
         
         // Find all players in range
@@ -324,7 +323,7 @@ class FrostTitanBoss(private val plugin: SurvivalPlus) {
                 
                 // Damage over time
                 if (data.phase >= 3) {
-                    player.damage(2.0 * data.worldTier * intensity, boss)
+                    player.damage(2.0 * data.worldTier * intensity, data.boss)
                 }
                 
                 // Freeze effect (Phase 4)
@@ -354,8 +353,7 @@ class FrostTitanBoss(private val plugin: SurvivalPlus) {
      * Cast Blizzard
      */
     private fun castBlizzard(data: BossData) {
-        val boss = data.boss
-        val location = boss.location
+        val location = data.boss.location
         val radius = 15.0
         val duration = 10L // 10 Sekunden
         
@@ -369,10 +367,10 @@ class FrostTitanBoss(private val plugin: SurvivalPlus) {
             // Damage + Effects every second
             if (ticks % 20L == 0L) {
                 location.world?.getNearbyEntities(location, radius, 10.0, radius)
+                location.world?.getNearbyEntities(location, radius, 10.0, radius)
                     ?.filterIsInstance<Player>()
                     ?.forEach { player ->
-                        player.damage(3.0 * data.worldTier, boss)
-                        player.addPotionEffect(PotionEffect(PotionEffectType.SLOWNESS, 40, 3))
+                        player.damage(3.0 * data.worldTier, data.boss)
                         player.addPotionEffect(PotionEffect(PotionEffectType.BLINDNESS, 40, 0))
                         
                         // Phase 4: Chance to freeze
@@ -386,7 +384,7 @@ class FrostTitanBoss(private val plugin: SurvivalPlus) {
         plugin.server.scheduler.runTaskLater(plugin, Runnable { task.cancel() }, duration * 20)
         
         location.world?.playSound(location, Sound.ENTITY_ENDER_DRAGON_FLAP, 2f, 1.5f)
-        announcePhase(location, data.phase, "§3Ein eisiger Blizzard wütet!")
+        announcePhase(location, "§3Ein eisiger Blizzard wütet!")
     }
 
     /**
@@ -503,12 +501,12 @@ class FrostTitanBoss(private val plugin: SurvivalPlus) {
         val location = data.boss.location
         val tierMultiplier = 1.0 + (data.worldTier - 1) * 0.3
         
-        // Guaranteed Drops
+        // Guaranteed Drops (scaled by tier)
         val guaranteedDrops = listOf(
-            ItemStack(Material.DIAMOND, (3..8).random()),
-            ItemStack(Material.PACKED_ICE, (10..20).random()),
-            ItemStack(Material.BLUE_ICE, (5..15).random()),
-            ItemStack(Material.SNOWBALL, (20..40).random())
+            ItemStack(Material.DIAMOND, ((3..8).random() * tierMultiplier).toInt().coerceAtLeast(1)),
+            ItemStack(Material.PACKED_ICE, ((10..20).random() * tierMultiplier).toInt().coerceAtLeast(1)),
+            ItemStack(Material.BLUE_ICE, ((5..15).random() * tierMultiplier).toInt().coerceAtLeast(1)),
+            ItemStack(Material.SNOWBALL, ((20..40).random() * tierMultiplier).toInt().coerceAtLeast(1))
         )
         
         guaranteedDrops.forEach { item ->
@@ -600,7 +598,7 @@ class FrostTitanBoss(private val plugin: SurvivalPlus) {
     /**
      * Announce Phase Change
      */
-    private fun announcePhase(location: Location, phase: Int, message: String) {
+    private fun announcePhase(location: Location, message: String) {
         val world = location.world ?: return
         world.getNearbyEntities(location, 50.0, 50.0, 50.0)
             .filterIsInstance<Player>()

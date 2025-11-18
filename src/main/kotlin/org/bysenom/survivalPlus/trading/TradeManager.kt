@@ -1,6 +1,7 @@
 package org.bysenom.survivalPlus.trading
 
 import org.bysenom.survivalPlus.SurvivalPlus
+import org.bysenom.survivalPlus.trading.Trade
 import org.bukkit.entity.Player
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap

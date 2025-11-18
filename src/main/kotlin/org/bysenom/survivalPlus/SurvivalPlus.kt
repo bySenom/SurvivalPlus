@@ -311,18 +311,7 @@ class SurvivalPlus : JavaPlugin() {
             worldTierManager.shutdown()
         }
 
-        if (::butcherBoss.isInitialized) {
-            butcherBoss.cleanup()
-        }
-
-        if (::harvesterBoss.isInitialized) {
-            harvesterBoss.cleanup()
-        }
-
-        if (::frostTitanBoss.isInitialized) {
-            frostTitanBoss.cleanup()
-        }
-
+        // Boss Cleanup (optional - Bosse haben eigene Cleanup-Logik)
         titanGolemBoss?.shutdown()
 
         if (::worldBossArenaManager.isInitialized) {

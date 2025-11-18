@@ -97,7 +97,7 @@ class TitanGolemBoss(private val plugin: SurvivalPlus) {
         boss.getAttribute(Attribute.MOVEMENT_SPEED)?.baseValue = 0.25
 
         // Boss Bar erstellen
-        val bossBar = setupBossBar(boss, maxHealth)
+        val bossBar = setupBossBar(boss)
 
         // Boss Data speichern
         val data = BossData(
@@ -121,7 +121,7 @@ class TitanGolemBoss(private val plugin: SurvivalPlus) {
     /**
      * Boss Bar Setup
      */
-    private fun setupBossBar(boss: IronGolem, maxHealth: Double): BossBar {
+    private fun setupBossBar(boss: IronGolem): BossBar {
         val bossBar = BossBar.bossBar(
             Component.text("⚔ $BOSS_NAME ⚔").color(BOSS_COLOR),
             1.0f,
@@ -547,11 +547,13 @@ class TitanGolemBoss(private val plugin: SurvivalPlus) {
         val location = boss.eyeLocation.clone()
         val direction = target.location.toVector().subtract(location.toVector()).normalize()
 
-        val boulder = boss.world.spawnFallingBlock(location, Material.STONE.createBlockData())
-        boulder.velocity = direction.multiply(1.5).setY(0.5)
-        boulder.dropItem = false
-        boulder.setHurtEntities(true)
-        boulder.setDamagePerBlock(25.0f * data.worldTier)
+        val boulder = boss.world.spawn(location, org.bukkit.entity.FallingBlock::class.java) { block ->
+            block.blockData = Material.STONE.createBlockData()
+            block.velocity = direction.multiply(1.5).setY(0.5)
+            block.dropItem = false
+            block.setHurtEntities(true)
+            block.setDamagePerBlock(25.0f * data.worldTier)
+        }
 
         // Partikel-Trail
         object : BukkitRunnable() {
@@ -647,7 +649,7 @@ class TitanGolemBoss(private val plugin: SurvivalPlus) {
                 it.customName(Component.text("Stone Minion").color(NamedTextColor.GRAY))
                 it.getAttribute(Attribute.MAX_HEALTH)?.baseValue = 50.0 * data.worldTier
                 it.health = it.getAttribute(Attribute.MAX_HEALTH)!!.value
-                it.equipment?.helmet = org.bukkit.inventory.ItemStack(Material.STONE)
+                it.equipment.helmet = org.bukkit.inventory.ItemStack(Material.STONE)
                 
                 // Markiere als Boss-Minion
                 val minionKey = org.bukkit.NamespacedKey(plugin, "boss_minion")
@@ -711,7 +713,7 @@ class TitanGolemBoss(private val plugin: SurvivalPlus) {
         }
 
         // Benachrichtige Arena Manager
-        plugin.worldBossArenaManager?.onBossDefeated()
+        plugin.worldBossArenaManager.onBossDefeated()
         
         plugin.logger.info("✓ Titan Golem entfernt")
     }

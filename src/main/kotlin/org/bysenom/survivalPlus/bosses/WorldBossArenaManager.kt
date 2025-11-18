@@ -1,7 +1,10 @@
 package org.bysenom.survivalPlus.bosses
 
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.event.ClickEvent
+import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import org.bysenom.survivalPlus.SurvivalPlus
 import org.bukkit.*
@@ -23,6 +26,7 @@ class WorldBossArenaManager(private val plugin: SurvivalPlus) {
         const val SPAWN_INTERVAL_MINUTES = 30
         const val ARENA_RADIUS = 50
         const val BOSS_WARNING_TIME = 60 // Sekunden vor Spawn
+        const val ARENA_EXIT_TIME = 60 // Sekunden nach Boss-Tod
     }
 
     private var bossWorld: World? = null
@@ -30,9 +34,11 @@ class WorldBossArenaManager(private val plugin: SurvivalPlus) {
     private var spawnTask: BukkitRunnable? = null
     private var activeBoss: UUID? = null
     private val playersInArena = ConcurrentHashMap.newKeySet<UUID>()
+    private val playerReturnLocations = ConcurrentHashMap<UUID, Location>()
     
     private var nextBossTime: Long = 0
     private var warningGiven = false
+    private var exitCountdown: BukkitRunnable? = null
 
     /**
      * Initialisiert das Arena-System
@@ -68,7 +74,6 @@ class WorldBossArenaManager(private val plugin: SurvivalPlus) {
      * Bereitet die Arena vor (Barrier, Spawnpoint, etc.)
      */
     private fun prepareArena() {
-        val center = arenaCenter ?: return
         val world = bossWorld ?: return
 
         // Setze Welteinstellungen
@@ -112,21 +117,33 @@ class WorldBossArenaManager(private val plugin: SurvivalPlus) {
     }
 
     /**
-     * Broadcast Boss-Warnung an alle Spieler
+     * Broadcast Boss-Warnung an alle Spieler mit anklickbarer Nachricht
      */
     private fun broadcastBossWarning() {
-        val message = Component.text()
-            .append(Component.text("⚔ ").color(NamedTextColor.RED))
-            .append(Component.text("WORLD BOSS SPAWN IN 60 SEKUNDEN!").color(NamedTextColor.GOLD))
-            .append(Component.text(" ⚔").color(NamedTextColor.RED))
+        val clickableMessage = Component.text()
+            .append(Component.text("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n").color(NamedTextColor.DARK_GRAY))
+            .append(Component.text("⚔ ").color(NamedTextColor.RED).decorate(TextDecoration.BOLD))
+            .append(Component.text("WORLD BOSS").color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD))
+            .append(Component.text(" spawnt in ").color(NamedTextColor.YELLOW))
+            .append(Component.text("60 SEKUNDEN").color(NamedTextColor.RED).decorate(TextDecoration.BOLD))
+            .append(Component.text("! ⚔\n").color(NamedTextColor.RED).decorate(TextDecoration.BOLD))
+            .append(Component.text("\n"))
+            .append(Component.text("» ").color(NamedTextColor.DARK_GRAY))
+            .append(
+                Component.text("[BEITRETEN]")
+                    .color(NamedTextColor.GREEN)
+                    .decorate(TextDecoration.BOLD)
+                    .clickEvent(ClickEvent.runCommand("/sp arena enter"))
+                    .hoverEvent(HoverEvent.showText(
+                        Component.text("Klicke um zur Arena zu teleportieren!").color(NamedTextColor.YELLOW)
+                    ))
+            )
+            .append(Component.text(" «\n").color(NamedTextColor.DARK_GRAY))
+            .append(Component.text("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━").color(NamedTextColor.DARK_GRAY))
             .build()
 
         Bukkit.getOnlinePlayers().forEach { player ->
-            player.sendMessage(Component.text("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━").color(NamedTextColor.DARK_GRAY))
-            player.sendMessage(message)
-            player.sendMessage(Component.text("Teleportiere mit: /sp boss enter").color(NamedTextColor.YELLOW))
-            player.sendMessage(Component.text("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━").color(NamedTextColor.DARK_GRAY))
-            
+            player.sendMessage(clickableMessage)
             player.playSound(player.location, Sound.ENTITY_ENDER_DRAGON_GROWL, 0.7f, 0.8f)
         }
     }
@@ -149,7 +166,28 @@ class WorldBossArenaManager(private val plugin: SurvivalPlus) {
         if (boss != null) {
             activeBoss = boss.uniqueId
             
-            // Broadcast an alle Spieler
+            // Anklickbare Nachricht
+            val bossSpawnMessage = Component.text()
+                .append(Component.text("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n").color(NamedTextColor.DARK_GRAY))
+                .append(Component.text("⚔ ").color(NamedTextColor.RED).decorate(TextDecoration.BOLD))
+                .append(Component.text("TITAN GOLEM").color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD))
+                .append(Component.text(" ist erschienen! ⚔\n").color(NamedTextColor.RED).decorate(TextDecoration.BOLD))
+                .append(Component.text("\n"))
+                .append(Component.text("» ").color(NamedTextColor.DARK_GRAY))
+                .append(
+                    Component.text("[JETZT BEITRETEN!]")
+                        .color(NamedTextColor.GREEN)
+                        .decorate(TextDecoration.BOLD)
+                        .clickEvent(ClickEvent.runCommand("/sp arena enter"))
+                        .hoverEvent(HoverEvent.showText(
+                            Component.text("Klicke um sofort zur Arena zu teleportieren!").color(NamedTextColor.YELLOW)
+                        ))
+                )
+                .append(Component.text(" «\n").color(NamedTextColor.DARK_GRAY))
+                .append(Component.text("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━").color(NamedTextColor.DARK_GRAY))
+                .build()
+            
+            // Title + Nachricht
             val title = Title.title(
                 Component.text("⚔ WORLD BOSS SPAWNED ⚔").color(NamedTextColor.RED),
                 Component.text("The Titan Golem has awakened!").color(NamedTextColor.YELLOW),
@@ -162,6 +200,7 @@ class WorldBossArenaManager(private val plugin: SurvivalPlus) {
             
             Bukkit.getOnlinePlayers().forEach { player ->
                 player.showTitle(title)
+                player.sendMessage(bossSpawnMessage)
                 player.playSound(player.location, Sound.ENTITY_WITHER_SPAWN, 1f, 0.5f)
             }
             
@@ -180,6 +219,11 @@ class WorldBossArenaManager(private val plugin: SurvivalPlus) {
             return false
         }
 
+        // Speichere Return-Location (nur wenn nicht bereits gespeichert)
+        if (!playerReturnLocations.containsKey(player.uniqueId)) {
+            playerReturnLocations[player.uniqueId] = player.location.clone()
+        }
+
         // Teleportiere zum Arena-Eingang
         val entryPoint = center.clone().add(0.0, 0.0, ARENA_RADIUS.toDouble() + 5)
         player.teleport(entryPoint)
@@ -196,13 +240,21 @@ class WorldBossArenaManager(private val plugin: SurvivalPlus) {
      * Teleportiert einen Spieler aus der Arena zurück
      */
     fun teleportFromArena(player: Player): Boolean {
-        // Teleportiere zum Survival Spawn
-        val survivalWorld = Bukkit.getWorld("Survival") ?: run {
-            player.sendMessage(Component.text("⚠ Survival-Welt nicht gefunden!").color(NamedTextColor.RED))
-            return false
+        // Prüfe ob Return-Location existiert
+        val returnLocation = playerReturnLocations.remove(player.uniqueId)
+        
+        if (returnLocation != null) {
+            // Zurück zum ursprünglichen Ort
+            player.teleport(returnLocation)
+        } else {
+            // Fallback: Survival Spawn
+            val survivalWorld = Bukkit.getWorld("Survival") ?: run {
+                player.sendMessage(Component.text("⚠ Survival-Welt nicht gefunden!").color(NamedTextColor.RED))
+                return false
+            }
+            player.teleport(survivalWorld.spawnLocation)
         }
-
-        player.teleport(survivalWorld.spawnLocation)
+        
         playersInArena.remove(player.uniqueId)
         
         player.sendMessage(Component.text("✓ Du hast die Arena verlassen").color(NamedTextColor.YELLOW))
@@ -226,22 +278,78 @@ class WorldBossArenaManager(private val plugin: SurvivalPlus) {
     }
 
     /**
-     * Boss wurde getötet - Cleanup
+     * Boss wurde getötet - Starte 60-Sekunden Countdown
      */
     fun onBossDefeated() {
         activeBoss = null
         
-        // Broadcast Sieg
-        val message = Component.text()
-            .append(Component.text("⚔ ").color(NamedTextColor.GOLD))
-            .append(Component.text("WORLD BOSS DEFEATED!").color(NamedTextColor.GREEN))
-            .append(Component.text(" ⚔").color(NamedTextColor.GOLD))
+        // Stoppe vorherigen Countdown
+        exitCountdown?.cancel()
+        
+        // Broadcast Sieg mit Countdown-Info
+        val victoryMessage = Component.text()
+            .append(Component.text("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n").color(NamedTextColor.DARK_GRAY))
+            .append(Component.text("⚔ ").color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD))
+            .append(Component.text("WORLD BOSS DEFEATED!").color(NamedTextColor.GREEN).decorate(TextDecoration.BOLD))
+            .append(Component.text(" ⚔\n").color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD))
+            .append(Component.text("\n"))
+            .append(Component.text("Die Arena schließt in ").color(NamedTextColor.YELLOW))
+            .append(Component.text("60 Sekunden").color(NamedTextColor.RED).decorate(TextDecoration.BOLD))
+            .append(Component.text("!\n").color(NamedTextColor.YELLOW))
+            .append(Component.text("Verlasse die Arena mit: ").color(NamedTextColor.GRAY))
+            .append(Component.text("/sp arena leave\n").color(NamedTextColor.AQUA))
+            .append(Component.text("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━").color(NamedTextColor.DARK_GRAY))
             .build()
 
         Bukkit.getOnlinePlayers().forEach { player ->
-            player.sendMessage(message)
+            player.sendMessage(victoryMessage)
             player.playSound(player.location, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f)
         }
+        
+        // Starte 60-Sekunden Countdown
+        exitCountdown = object : BukkitRunnable() {
+            var timeLeft = ARENA_EXIT_TIME
+            
+            override fun run() {
+                val playersInBossWorld = Bukkit.getOnlinePlayers().filter { it.world.name == BOSS_WORLD_NAME }
+                
+                if (playersInBossWorld.isEmpty()) {
+                    cancel()
+                    return
+                }
+                
+                // Warnungen bei 60, 30, 10, 5, 3, 2, 1 Sekunden
+                if (timeLeft in listOf(60, 30, 10, 5, 3, 2, 1)) {
+                    val warning = Component.text()
+                        .append(Component.text("⚠ ").color(NamedTextColor.RED))
+                        .append(Component.text("Arena schließt in ").color(NamedTextColor.YELLOW))
+                        .append(Component.text("$timeLeft").color(NamedTextColor.RED).decorate(TextDecoration.BOLD))
+                        .append(Component.text(" Sekunden!").color(NamedTextColor.YELLOW))
+                        .build()
+                    
+                    playersInBossWorld.forEach { player ->
+                        player.sendMessage(warning)
+                        player.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f)
+                    }
+                }
+                
+                if (timeLeft <= 0) {
+                    // Teleportiere alle verbleibenden Spieler zurück
+                    playersInBossWorld.forEach { player ->
+                        teleportFromArena(player)
+                        player.sendMessage(
+                            Component.text("⚠ Du wurdest zur Arena-Ausgang teleportiert!").color(NamedTextColor.RED)
+                        )
+                    }
+                    cancel()
+                    return
+                }
+                
+                timeLeft--
+            }
+        }.apply { runTaskTimer(plugin, 0L, 20L) } // Jede Sekunde
+        
+        plugin.logger.info("✓ Boss besiegt - 60-Sekunden Countdown gestartet")
     }
 
     /**
@@ -249,7 +357,9 @@ class WorldBossArenaManager(private val plugin: SurvivalPlus) {
      */
     fun shutdown() {
         spawnTask?.cancel()
+        exitCountdown?.cancel()
         playersInArena.clear()
+        playerReturnLocations.clear()
         plugin.logger.info("✓ World Boss Arena beendet")
     }
 }

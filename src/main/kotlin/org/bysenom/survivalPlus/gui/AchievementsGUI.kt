@@ -53,7 +53,7 @@ class AchievementsGUI(private val plugin: SurvivalPlus) : Listener {
         // Achievement Items erstellen (max 45 Slots für Achievements)
         filteredAchievements.take(45).forEachIndexed { index, achievement ->
             val isCompleted = achievement in completedAchievements
-            val item = createAchievementItem(achievement, isCompleted, progressMap, player)
+            val item = createAchievementItem(achievement, isCompleted, progressMap)
             inventory.setItem(index, item)
         }
 
@@ -135,8 +135,7 @@ class AchievementsGUI(private val plugin: SurvivalPlus) : Listener {
     private fun createAchievementItem(
         achievement: Achievement, 
         isCompleted: Boolean, 
-        progressMap: Map<String, Int>,
-        player: Player
+        progressMap: Map<String, Int>
     ): ItemStack {
         val item = ItemStack(if (isCompleted) achievement.icon else Material.GRAY_DYE)
         val meta = item.itemMeta
@@ -219,41 +218,37 @@ class AchievementsGUI(private val plugin: SurvivalPlus) : Listener {
     @EventHandler
     fun onClick(event: InventoryClickEvent) {
         val title = event.view.title()
+        val plainText = extractPlainText(title)
         
-        if (title is Component) {
-            val plainText = extractPlainText(title)
-            
-            if (plainText.contains("Erfolge")) {
-                event.isCancelled = true
+        if (plainText.contains("Erfolge")) {
+            event.isCancelled = true
 
-                val clickedItem = event.currentItem ?: return
-                val player = event.whoClicked as? Player ?: return
-                val slot = event.slot
+            val player = event.whoClicked as? Player ?: return
+            val slot = event.slot
 
-                // Filter-Buttons (Slots 45-48)
-                when (slot) {
-                    45 -> {
-                        player.playSound(player.location, org.bukkit.Sound.UI_BUTTON_CLICK, 1f, 1f)
-                        openGUI(player, AchievementFilter.ALL)
-                    }
-                    46 -> {
-                        player.playSound(player.location, org.bukkit.Sound.UI_BUTTON_CLICK, 1f, 1f)
-                        openGUI(player, AchievementFilter.COMPLETED)
-                    }
-                    47 -> {
-                        player.playSound(player.location, org.bukkit.Sound.UI_BUTTON_CLICK, 1f, 1f)
-                        openGUI(player, AchievementFilter.IN_PROGRESS)
-                    }
-                    48 -> {
-                        player.playSound(player.location, org.bukkit.Sound.UI_BUTTON_CLICK, 1f, 1f)
-                        openGUI(player, AchievementFilter.LOCKED)
-                    }
-                    53 -> {
-                        // Schließen
-                        player.closeInventory()
-                        player.playSound(player.location, org.bukkit.Sound.UI_BUTTON_CLICK, 1f, 1f)
-                        achievementPages.remove(player)
-                    }
+            // Filter-Buttons (Slots 45-48)
+            when (slot) {
+                45 -> {
+                    player.playSound(player.location, org.bukkit.Sound.UI_BUTTON_CLICK, 1f, 1f)
+                    openGUI(player, AchievementFilter.ALL)
+                }
+                46 -> {
+                    player.playSound(player.location, org.bukkit.Sound.UI_BUTTON_CLICK, 1f, 1f)
+                    openGUI(player, AchievementFilter.COMPLETED)
+                }
+                47 -> {
+                    player.playSound(player.location, org.bukkit.Sound.UI_BUTTON_CLICK, 1f, 1f)
+                    openGUI(player, AchievementFilter.IN_PROGRESS)
+                }
+                48 -> {
+                    player.playSound(player.location, org.bukkit.Sound.UI_BUTTON_CLICK, 1f, 1f)
+                    openGUI(player, AchievementFilter.LOCKED)
+                }
+                53 -> {
+                    // Schließen
+                    player.closeInventory()
+                    player.playSound(player.location, org.bukkit.Sound.UI_BUTTON_CLICK, 1f, 1f)
+                    achievementPages.remove(player)
                 }
             }
         }
