@@ -284,6 +284,10 @@ class HarvesterBoss(private val plugin: SurvivalPlus) {
                 it.customName(Component.text("Ernter's Diener").color(BOSS_COLOR))
                 it.getAttribute(Attribute.MAX_HEALTH)?.baseValue = 15.0 * data.worldTier
                 it.health = it.getAttribute(Attribute.MAX_HEALTH)!!.value
+                
+                // Markiere als Boss-Minion (kein Loot)
+                val minionKey = org.bukkit.NamespacedKey(plugin, "boss_minion")
+                it.persistentDataContainer.set(minionKey, org.bukkit.persistence.PersistentDataType.BYTE, 1)
             }
         }
         

@@ -55,9 +55,8 @@ class ShrineProximityTask(private val plugin: SurvivalPlus) : BukkitRunnable() {
 
     private fun handleShrineProximity(player: Player, shrine: ShrineManager.ShrineData) {
         val playerId = player.uniqueId
-        val shrineId = plugin.shrineManager.getAllShrines()
-            .firstOrNull { it.location == shrine.location }
-            ?.let { UUID.randomUUID() } // Temporäre ID
+        // Generiere stabile ID basierend auf Shrine-Location
+        val shrineId = UUID.nameUUIDFromBytes("${shrine.location.world?.name}_${shrine.location.blockX}_${shrine.location.blockY}_${shrine.location.blockZ}".toByteArray())
 
         // Prüfe ob dies ein neuer Shrine ist
         val lastShrineId = playerLastNearbyShrine[playerId]

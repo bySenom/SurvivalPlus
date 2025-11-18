@@ -247,6 +247,10 @@ class ButcherBoss(private val plugin: SurvivalPlus) {
         val x = location.blockX
         val y = location.blockY
         val z = location.blockZ
+        
+        // Konvertiere Component zu Plain Text
+        val tierComponent = plugin.worldTierManager.getWorldTier(world).getDisplayComponent()
+        val tierText = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(tierComponent)
 
         world.players.forEach { player ->
             player.sendMessage("§8§m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -255,7 +259,7 @@ class ButcherBoss(private val plugin: SurvivalPlus) {
             player.sendMessage("")
             player.sendMessage("  §7The §c§lBUTCHER §7has spawned!")
             player.sendMessage("  §7Location: §f$x, $y, $z")
-            player.sendMessage("  §7World Tier: ${plugin.worldTierManager.getWorldTier(world).getDisplayComponent()}")
+            player.sendMessage("  §7World Tier: §f$tierText")
             player.sendMessage("")
             player.sendMessage("§8§m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 

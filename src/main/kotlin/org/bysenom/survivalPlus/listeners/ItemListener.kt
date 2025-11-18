@@ -23,6 +23,14 @@ class ItemListener(private val plugin: SurvivalPlus) : Listener {
         val entity = event.entity
         if (entity !is Monster) return
 
+        // Boss-Minions droppen kein Loot
+        val minionKey = org.bukkit.NamespacedKey(plugin, "boss_minion")
+        if (entity.persistentDataContainer.has(minionKey, org.bukkit.persistence.PersistentDataType.BYTE)) {
+            event.drops.clear()
+            event.droppedExp = 0
+            return
+        }
+
         val killer = entity.killer ?: return
 
         // Drop-Chance basierend auf Monster-Typ
