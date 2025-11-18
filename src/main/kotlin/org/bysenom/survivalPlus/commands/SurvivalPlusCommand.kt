@@ -196,12 +196,6 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
             1
         }
 
-        val quality = if (args.size >= 5) {
-            Quality.fromName(args[4]) ?: customEnchantment.minQuality
-        } else {
-            customEnchantment.minQuality
-        }
-
         val enchantedBook = org.bukkit.inventory.ItemStack(Material.ENCHANTED_BOOK)
         plugin.enchantmentManager.addEnchantment(enchantedBook, customEnchantment, level)
 
@@ -510,7 +504,7 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
         plugin.logger.info("[Kit] ${player.name} erhielt Mythic Test Kit")
     }
 
-    private fun handleReforge(sender: CommandSender, args: Array<out String>) {
+    private fun handleReforge(sender: CommandSender, @Suppress("UNUSED_PARAMETER") args: Array<out String>) {
         if (sender !is Player) {
             sender.sendMessage(Component.text("Nur Spieler können diesen Befehl nutzen!")
                 .color(NamedTextColor.RED))
@@ -549,7 +543,7 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
         plugin.customCraftingGUI.openGUI(sender)
     }
 
-    private fun handleInfo(sender: CommandSender, args: Array<out String>) {
+    private fun handleInfo(sender: CommandSender, @Suppress("UNUSED_PARAMETER") args: Array<out String>) {
         if (sender !is Player) {
             sender.sendMessage(Component.text("Nur Spieler können diesen Befehl nutzen!")
                 .color(NamedTextColor.RED))
@@ -630,7 +624,7 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
         }
     }
 
-    private fun handleStartEvent(sender: CommandSender, args: Array<out String>) {
+    private fun handleStartEvent(sender: CommandSender, @Suppress("UNUSED_PARAMETER") args: Array<out String>) {
         if (!sender.hasPermission("survivalplus.event")) {
             sender.sendMessage(Component.text("Keine Berechtigung!")
                 .color(NamedTextColor.RED))
@@ -875,7 +869,7 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
                 }
 
                 val location = sender.location
-                val butcher = plugin.butcherBoss.spawnButcher(location, worldTier)
+                plugin.butcherBoss.spawnButcher(location, worldTier)
 
                 sender.sendMessage(Component.text("✓ The Butcher wurde gespawnt! (Tier $worldTier)")
                     .color(NamedTextColor.GREEN))

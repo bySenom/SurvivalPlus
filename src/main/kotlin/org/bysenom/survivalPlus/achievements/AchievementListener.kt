@@ -18,7 +18,7 @@ class AchievementListener(private val plugin: SurvivalPlus) : Listener {
         val item = player.inventory.getItem(event.newSlot) ?: return
         
         // Prüfe ob Custom Item
-        val quality = plugin.itemManager.getQuality(item) ?: return
+        if (plugin.itemManager.getQuality(item) == null) return
         
         // Triggere Achievement-Check
         plugin.server.scheduler.runTaskLater(plugin, Runnable {

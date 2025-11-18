@@ -116,7 +116,7 @@ class QualityPlateManager(private val plugin: SurvivalPlus) : Listener {
     /**
      * Zeigt ein temporäres Hologramm für einen Spieler
      */
-    fun showTemporaryPlate(player: Player, location: Location, text: String, duration: Long = 40L) {
+    fun showTemporaryPlate(@Suppress("UNUSED_PARAMETER") player: Player, location: Location, text: String, duration: Long = 40L) {
         if (!plugin.config.getBoolean("features.quality-plates", true)) return
 
         val hologram = location.world.spawn(location, ArmorStand::class.java) { armorStand ->

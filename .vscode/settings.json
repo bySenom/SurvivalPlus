@@ -1,8 +1,12 @@
 {
     "java.compile.nullAnalysis.mode": "automatic",
     "cSpell.words": [
+        "Abbauen",
+        "ABBRECHEN",
+        "abgebrochen",
+        "abgelehnt",
         "bukkit",
         "bysenom"
     ],
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "automatic"
 }

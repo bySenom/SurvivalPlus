@@ -3,7 +3,9 @@ package org.bysenom.survivalPlus.mobs
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.title.Title
 import org.bysenom.survivalPlus.SurvivalPlus
+import java.time.Duration
 import org.bysenom.survivalPlus.models.Quality
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
@@ -130,13 +132,13 @@ class ButcherBoss(private val plugin: SurvivalPlus) {
         butcher.persistentDataContainer.set(lastChargeKey, PersistentDataType.LONG, 0L)
 
         // Boss-Bar erstellen
-        createBossBar(butcher, worldTier)
+        createBossBar(butcher)
 
         // Spawn-Effekte
         playSpawnEffects(butcher)
 
         // Spawn-Nachricht
-        broadcastSpawnMessage(location, worldTier)
+        broadcastSpawnMessage(location)
 
         // Start AI Task
         startButcherAI(butcher)
@@ -156,7 +158,7 @@ class ButcherBoss(private val plugin: SurvivalPlus) {
     /**
      * Erstellt die Boss-Bar
      */
-    private fun createBossBar(butcher: Zombie, worldTier: Int) {
+    private fun createBossBar(butcher: Zombie) {
         val bossBar = Bukkit.createBossBar(
             "§c§l⚔ THE BUTCHER ⚔", BarColor.RED,
             BarStyle.SEGMENTED_10
@@ -242,13 +244,13 @@ class ButcherBoss(private val plugin: SurvivalPlus) {
     /**
      * Spawn-Nachricht broadcast
      */
-    private fun broadcastSpawnMessage(location: Location, worldTier: Int) {
+    private fun broadcastSpawnMessage(location: Location) {
         val world = location.world!!
         val x = location.blockX
         val y = location.blockY
         val z = location.blockZ
         
-        // Konvertiere Component zu Plain Text
+        // Konvertiere Component zu Plain Text für Tier $worldTier
         val tierComponent = plugin.worldTierManager.getWorldTier(world).getDisplayComponent()
         val tierText = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(tierComponent)
 
@@ -261,10 +263,15 @@ class ButcherBoss(private val plugin: SurvivalPlus) {
             player.sendMessage("  §7Location: §f$x, $y, $z")
             player.sendMessage("  §7World Tier: §f$tierText")
             player.sendMessage("")
-            player.sendMessage("§8§m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-
             player.playSound(player.location, Sound.ENTITY_WITHER_SPAWN, 0.5f, 0.5f)
-            player.sendTitle("§c§l⚔ FRESH MEAT! ⚔", "§7The Butcher has spawned", 10, 70, 20)
+            player.showTitle(Title.title(
+                Component.text("⚔ FRESH MEAT! ⚔")
+                    .color(NamedTextColor.RED)
+                    .decoration(TextDecoration.BOLD, true),
+                Component.text("The Butcher has spawned")
+                    .color(NamedTextColor.GRAY),
+                Title.Times.times(Duration.ofMillis(500), Duration.ofMillis(3500), Duration.ofSeconds(1))
+            ))
         }
     }
 
