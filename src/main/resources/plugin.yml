@@ -1,0 +1,4 @@
+name: SurvivalPlus
+version: '1.0-SNAPSHOT'
+main: org.bysenom.survivalPlus.SurvivalPlus
+api-version: '1.21'
