@@ -235,4 +235,18 @@ class AchievementManager(private val plugin: SurvivalPlus) {
     fun getPlayerAchievements(uuid: UUID): Set<Achievement> {
         return playerAchievements[uuid]?.toSet() ?: emptySet()
     }
+
+    /**
+     * Gibt alle abgeschlossenen Achievements zurück
+     */
+    fun getCompletedAchievements(uuid: UUID): Set<Achievement> {
+        return playerAchievements[uuid]?.toSet() ?: emptySet()
+    }
+
+    /**
+     * Gibt alle Progress-Daten zurück
+     */
+    fun getAllProgress(uuid: UUID): Map<String, Int> {
+        return playerProgress[uuid]?.toMap() ?: emptyMap()
+    }
 }

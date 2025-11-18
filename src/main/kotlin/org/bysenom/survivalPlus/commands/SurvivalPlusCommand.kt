@@ -45,6 +45,8 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
             "reload" -> handleReload(sender)
             "debug" -> handleDebug(sender, args)
             "sb" , "scoreboard" -> handleScoreboard(sender, args)
+            "skills" -> handleSkills(sender)
+            "achievements" -> handleAchievements(sender)
             else -> sendHelp(sender)
         }
 
@@ -1009,6 +1011,34 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
         sender.sendMessage(Component.text("/sp debug [memory|clear] - Debug-Informationen")
             .color(NamedTextColor.YELLOW))
         sender.sendMessage(Component.text("/sp sb toggle - Aktiviert/Deaktiviert das Scoreboard").color(NamedTextColor.YELLOW))
+        sender.sendMessage(Component.text("/sp skills - Öffne deine Skills").color(NamedTextColor.YELLOW))
+        sender.sendMessage(Component.text("/sp achievements - Zeige deine Erfolge").color(NamedTextColor.YELLOW))
+    }
+
+    /**
+     * Öffnet das Skills GUI
+     */
+    private fun handleSkills(sender: CommandSender) {
+        if (sender !is Player) {
+            sender.sendMessage(Component.text("Dieser Command ist nur für Spieler!").color(NamedTextColor.RED))
+            return
+        }
+
+        plugin.skillsGUI.openGUI(sender)
+        sender.playSound(sender.location, org.bukkit.Sound.UI_BUTTON_CLICK, 1f, 1f)
+    }
+
+    /**
+     * Öffnet das Achievements GUI
+     */
+    private fun handleAchievements(sender: CommandSender) {
+        if (sender !is Player) {
+            sender.sendMessage(Component.text("Dieser Command ist nur für Spieler!").color(NamedTextColor.RED))
+            return
+        }
+
+        plugin.achievementsGUI.openGUI(sender)
+        sender.playSound(sender.location, org.bukkit.Sound.UI_BUTTON_CLICK, 1f, 1f)
     }
 
     override fun onTabComplete(
@@ -1018,7 +1048,7 @@ class SurvivalPlusCommand(private val plugin: SurvivalPlus) : CommandExecutor, T
         args: Array<out String>
     ): List<String> {
         return when (args.size) {
-            1 -> listOf("give", "giveblock", "givebook", "enchant", "kit", "reforge", "craft", "info", "worldtier", "startevent", "locate", "shrine", "butcher", "sb", "reload", "debug")
+            1 -> listOf("give", "giveblock", "givebook", "enchant", "kit", "reforge", "craft", "info", "worldtier", "startevent", "locate", "shrine", "butcher", "sb", "reload", "debug", "skills", "achievements")
                 .filter { it.startsWith(args[0].lowercase()) }
             2 -> when (args[0].lowercase()) {
                 "give", "giveblock", "givebook" -> Bukkit.getOnlinePlayers().map { it.name }

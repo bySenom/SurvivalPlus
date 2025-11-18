@@ -152,6 +152,7 @@ class EnchantmentSourceListener(private val plugin: SurvivalPlus) : Listener {
 
     /**
      * Loot Chests - Custom Enchanted Books in Dungeon-Loot
+     * Erweitert um: Ancient Cities, End Cities, Strongholds, Nether Fortresses
      */
     @EventHandler(priority = EventPriority.NORMAL)
     fun onLootGenerate(event: LootGenerateEvent) {
@@ -165,49 +166,75 @@ class EnchantmentSourceListener(private val plugin: SurvivalPlus) : Listener {
         // Nur für Dungeon/Structure Loot
         val key = lootTable.key.toString()
 
-        // Trial Chambers - Spezielle Behandlung!
+        // Strukturen identifizieren
         val isTrialChamber = key.contains("trial_chamber") || key.contains("trial_spawner") ||
                              key.contains("vault") || key.contains("ominous")
+        val isAncientCity = key.contains("ancient_city") || key.contains("deep_dark")
+        val isEndCity = key.contains("end_city")
+        val isStronghold = key.contains("stronghold")
+        val isNetherFortress = key.contains("fortress") && key.contains("nether")
+        val isMansion = key.contains("mansion")
+        val isBastion = key.contains("bastion")
 
-        if (!key.contains("chest") && !key.contains("dungeon") && !key.contains("stronghold") &&
-            !key.contains("mansion") && !key.contains("fortress") && !key.contains("end_city") && !isTrialChamber) {
+        if (!key.contains("chest") && !isTrialChamber && !isAncientCity && !isEndCity && 
+            !isStronghold && !isNetherFortress && !isMansion && !isBastion) {
             return
         }
 
         // World Tier beeinflusst Qualität
         val worldTier = plugin.worldTierManager.getWorldTier(world)
 
-        // Trial Chambers haben höhere Chancen!
-        val baseChance = if (isTrialChamber) 0.40 else 0.15  // 40% für Trial Chambers, 15% für normale
+        // Strukturen haben unterschiedliche Chancen und Qualitäten
+        val (baseChance, qualityBoost) = when {
+            isTrialChamber -> Pair(0.40, 2)      // 40% Chance, +2 Quality Tiers
+            isAncientCity -> Pair(0.50, 3)       // 50% Chance, +3 Quality Tiers (beste Quelle!)
+            isEndCity -> Pair(0.45, 2)           // 45% Chance, +2 Quality Tiers
+            isStronghold -> Pair(0.30, 1)        // 30% Chance, +1 Quality Tier
+            isNetherFortress -> Pair(0.25, 1)    // 25% Chance, +1 Quality Tier
+            isBastion -> Pair(0.35, 2)           // 35% Chance, +2 Quality Tiers
+            isMansion -> Pair(0.30, 1)           // 30% Chance, +1 Quality Tier
+            else -> Pair(0.15, 0)                // 15% normale Dungeons
+        }
+
         val bookChance = baseChance + (worldTier.tier * 0.05) // + 5% pro Tier
 
         if (Random.nextDouble() < bookChance) {
-            // Trial Chambers haben bessere Qualitäten
-            val quality = if (isTrialChamber) {
-                when {
-                    worldTier.tier >= 5 && Random.nextDouble() < 0.20 -> Quality.MYTHIC  // 20% für Mythic
-                    worldTier.tier >= 4 && Random.nextDouble() < 0.35 -> Quality.LEGENDARY
-                    worldTier.tier >= 3 && Random.nextDouble() < 0.40 -> Quality.EPIC
-                    worldTier.tier >= 2 -> Quality.RARE
-                    else -> Quality.UNCOMMON
-                }
-            } else {
-                when {
-                    worldTier.tier >= 5 && Random.nextDouble() < 0.10 -> Quality.MYTHIC
-                    worldTier.tier >= 4 && Random.nextDouble() < 0.20 -> Quality.LEGENDARY
-                    worldTier.tier >= 3 && Random.nextDouble() < 0.30 -> Quality.EPIC
-                    worldTier.tier >= 2 -> Quality.RARE
-                    else -> Quality.UNCOMMON
-                }
-            }
+            // Qualität mit Boost
+            val quality = determineQualityWithBoost(worldTier, qualityBoost)
 
             val enchantedBook = createEnchantedBook(quality)
             if (enchantedBook != null) {
                 event.loot.add(enchantedBook)
-                val source = if (isTrialChamber) "Trial Chamber" else "Dungeon"
-                plugin.logger.fine("Custom Enchanted Book (${quality.displayName}) zu $source Loot hinzugefügt: $key")
+                val structureName = when {
+                    isTrialChamber -> "Trial Chamber"
+                    isAncientCity -> "Ancient City"
+                    isEndCity -> "End City"
+                    isStronghold -> "Stronghold"
+                    isNetherFortress -> "Nether Fortress"
+                    isBastion -> "Bastion"
+                    isMansion -> "Woodland Mansion"
+                    else -> "Dungeon"
+                }
+                plugin.logger.fine("Custom Enchanted Book (${quality.displayName}) zu $structureName Loot hinzugefügt")
             }
         }
+    }
+
+    /**
+     * Bestimmt Qualität mit Structure-Boost
+     */
+    private fun determineQualityWithBoost(worldTier: org.bysenom.survivalPlus.worldtier.WorldTier, boost: Int): Quality {
+        val baseQuality = when {
+            worldTier.tier >= 5 && Random.nextDouble() < 0.15 -> Quality.MYTHIC
+            worldTier.tier >= 4 && Random.nextDouble() < 0.30 -> Quality.LEGENDARY
+            worldTier.tier >= 3 && Random.nextDouble() < 0.40 -> Quality.EPIC
+            worldTier.tier >= 2 -> Quality.RARE
+            else -> Quality.UNCOMMON
+        }
+        
+        // Boost erhöht Quality Tier
+        val boostedTier = minOf(baseQuality.tier + boost, Quality.MYTHIC.tier)
+        return Quality.entries.first { it.tier == boostedTier }
     }
 
     /**
@@ -228,6 +255,7 @@ class EnchantmentSourceListener(private val plugin: SurvivalPlus) : Listener {
 
     /**
      * Boss & Special Mob Drops - Hochwertige Custom Enchanted Books
+     * Erweitert: Wither, Ender Dragon, Warden haben garantierte Drops
      */
     @EventHandler(priority = EventPriority.NORMAL)
     fun onMobDeath(event: EntityDeathEvent) {
@@ -246,33 +274,33 @@ class EnchantmentSourceListener(private val plugin: SurvivalPlus) : Listener {
                          entity.scoreboardTags.contains("ominous_trial")
 
         // Bestimme Drop-Chance basierend auf Mob-Typ
-        val (baseChance, minQuality) = when {
-            // Trial Chamber Mobs - Erhöhte Chance!
-            isTrialMob -> Pair(0.25, Quality.RARE)  // 25% Base-Chance, mindestens Rare
+        val (baseChance, minQuality, guaranteedBooks) = when {
+            // Major Bosses - Garantierte Multiple Drops!
+            entity.type == EntityType.ENDER_DRAGON -> Triple(1.00, Quality.MYTHIC, 3..5)
+            entity.type == EntityType.WITHER -> Triple(1.00, Quality.LEGENDARY, 2..4)
+            entity.type == EntityType.WARDEN -> Triple(1.00, Quality.LEGENDARY, 2..3)
 
-            // Bosses - Sehr hohe Chance auf gute Enchants
-            entity.type == EntityType.ENDER_DRAGON -> Pair(0.95, Quality.LEGENDARY)
-            entity.type == EntityType.WITHER -> Pair(0.90, Quality.LEGENDARY)
-            entity.type == EntityType.WARDEN -> Pair(0.85, Quality.EPIC)
+            // Trial Chamber Mobs - Erhöhte Chance!
+            isTrialMob -> Triple(0.25, Quality.RARE, 1..1)
 
             // Mini-Bosses
-            entity.type == EntityType.ELDER_GUARDIAN -> Pair(0.50, Quality.EPIC)
+            entity.type == EntityType.ELDER_GUARDIAN -> Triple(0.50, Quality.EPIC, 1..2)
 
             // Starke Mobs
-            entity.type == EntityType.EVOKER -> Pair(0.30, Quality.RARE)
-            entity.type == EntityType.RAVAGER -> Pair(0.25, Quality.RARE)
-            entity.type == EntityType.PIGLIN_BRUTE -> Pair(0.20, Quality.RARE)
-            entity.type == EntityType.VINDICATOR -> Pair(0.15, Quality.UNCOMMON)
+            entity.type == EntityType.EVOKER -> Triple(0.30, Quality.RARE, 1..1)
+            entity.type == EntityType.RAVAGER -> Triple(0.25, Quality.RARE, 1..1)
+            entity.type == EntityType.PIGLIN_BRUTE -> Triple(0.20, Quality.RARE, 1..1)
+            entity.type == EntityType.VINDICATOR -> Triple(0.15, Quality.UNCOMMON, 1..1)
 
             // Spezielle Mobs
-            entity.type == EntityType.SHULKER -> Pair(0.10, Quality.RARE)
-            entity.type == EntityType.BLAZE -> Pair(0.08, Quality.UNCOMMON)
-            entity.type == EntityType.ENDERMAN -> Pair(0.05, Quality.UNCOMMON)
+            entity.type == EntityType.SHULKER -> Triple(0.10, Quality.RARE, 1..1)
+            entity.type == EntityType.BLAZE -> Triple(0.08, Quality.UNCOMMON, 1..1)
+            entity.type == EntityType.ENDERMAN -> Triple(0.05, Quality.UNCOMMON, 1..1)
 
             else -> {
                 // Special Mobs aus unserem System
                 if (entity.scoreboardTags.contains("special_mob")) {
-                    Pair(0.40, Quality.EPIC)
+                    Triple(0.40, Quality.EPIC, 1..1)
                 } else {
                     return
                 }
@@ -283,23 +311,35 @@ class EnchantmentSourceListener(private val plugin: SurvivalPlus) : Listener {
         val finalChance = baseChance + (worldTier.tier * 0.05)
 
         if (Random.nextDouble() < finalChance) {
-            // Bestimme Qualität (mindestens minQuality)
-            val quality = when {
-                worldTier.tier >= 5 && Random.nextDouble() < 0.15 -> Quality.MYTHIC
-                worldTier.tier >= 4 && Random.nextDouble() < 0.30 -> Quality.LEGENDARY
-                worldTier.tier >= 3 && Random.nextDouble() < 0.40 -> Quality.EPIC
-                else -> maxOf(minQuality, Quality.RARE)
+            // Bestimme Anzahl der Books
+            val bookCount = guaranteedBooks.random()
+            
+            repeat(bookCount) {
+                // Bestimme Qualität (mindestens minQuality)
+                val quality = when {
+                    worldTier.tier >= 5 && Random.nextDouble() < 0.20 -> Quality.MYTHIC
+                    worldTier.tier >= 4 && Random.nextDouble() < 0.35 -> Quality.LEGENDARY
+                    worldTier.tier >= 3 && Random.nextDouble() < 0.40 -> Quality.EPIC
+                    else -> maxOf(minQuality, Quality.RARE)
+                }
+
+                val enchantedBook = createEnchantedBook(quality)
+                if (enchantedBook != null) {
+                    event.drops.add(enchantedBook)
+                }
             }
 
-            val enchantedBook = createEnchantedBook(quality)
-            if (enchantedBook != null) {
-                event.drops.add(enchantedBook)
-
-                val source = if (isTrialMob) "Trial Mob" else entity.type.name
-                killer.sendMessage("§d💀 $source hat ein ${quality.displayName}§d Enchanted Book gedroppt!")
-                killer.playSound(killer.location, org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f)
-                plugin.logger.info("[Enchant] ${killer.name} erhielt ${quality.displayName} Book von $source")
+            val source = when {
+                isTrialMob -> "Trial Mob"
+                entity.type == EntityType.ENDER_DRAGON -> "Ender Dragon"
+                entity.type == EntityType.WITHER -> "Wither"
+                entity.type == EntityType.WARDEN -> "Warden"
+                else -> entity.type.name
             }
+            
+            killer.sendMessage("§d💀 $source hat $bookCount ${if(bookCount > 1) "Enchanted Books" else "Enchanted Book"} gedroppt!")
+            killer.playSound(killer.location, org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f)
+            plugin.logger.info("[Enchant] ${killer.name} erhielt $bookCount Books von $source")
         }
     }
 

@@ -109,6 +109,12 @@ class SurvivalPlus : JavaPlugin() {
     lateinit var achievementManager: org.bysenom.survivalPlus.achievements.AchievementManager
         private set
 
+    lateinit var skillsGUI: org.bysenom.survivalPlus.gui.SkillsGUI
+        private set
+
+    lateinit var achievementsGUI: org.bysenom.survivalPlus.gui.AchievementsGUI
+        private set
+
     override fun onEnable() {
         // ASCII Art Logo
         logger.info("  ____                  _            _ ____  _           ")
@@ -146,6 +152,8 @@ class SurvivalPlus : JavaPlugin() {
         scoreboardManager = org.bysenom.survivalPlus.scoreboard.ScoreboardManager(this)
         skillDataManager = org.bysenom.survivalPlus.managers.SkillDataManager(this)
         achievementManager = org.bysenom.survivalPlus.achievements.AchievementManager(this)
+        skillsGUI = org.bysenom.survivalPlus.gui.SkillsGUI(this)
+        achievementsGUI = org.bysenom.survivalPlus.gui.AchievementsGUI(this)
 
         // Commands registrieren
         val command = getCommand("survivalplus")
@@ -177,6 +185,8 @@ class SurvivalPlus : JavaPlugin() {
         server.pluginManager.registerEvents(qualityPlateManager, this) // Für ChunkUnload Events
         server.pluginManager.registerEvents(org.bysenom.survivalPlus.listeners.PlayerDataListener(this), this)
         server.pluginManager.registerEvents(org.bysenom.survivalPlus.achievements.AchievementListener(this), this)
+        server.pluginManager.registerEvents(skillsGUI, this)
+        server.pluginManager.registerEvents(achievementsGUI, this)
 
         // Rezepte registrieren
         customBlockRecipes.registerRecipes()

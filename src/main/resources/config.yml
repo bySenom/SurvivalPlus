@@ -87,6 +87,63 @@ enchantment-balance:
   thunder-strike-cooldown: 8  # Sekunden
 
 # ===================================
+# ENCHANTMENT SOURCES (v1.1.0+)
+# ===================================
+enchantment-sources:
+  # Loot Chests - Spawn-Chancen pro Struktur (Base %)
+  loot-chests:
+    trial-chambers: 40       # Trial Chambers (beste Quelle!)
+    ancient-cities: 50       # Ancient Cities (Deep Dark) - höchste Chance!
+    end-cities: 45           # End Cities
+    strongholds: 30          # Strongholds
+    nether-fortresses: 25    # Nether Fortresses
+    bastions: 35             # Bastion Remnants
+    woodland-mansions: 30    # Woodland Mansions
+    dungeons: 15             # Normale Dungeons
+
+  # Quality-Boost pro Struktur (0-3, erhöht Min-Quality)
+  quality-boost:
+    trial-chambers: 2        # +2 Quality Tiers
+    ancient-cities: 3        # +3 Quality Tiers (garantiert Epic+)
+    end-cities: 2            # +2 Quality Tiers
+    strongholds: 1           # +1 Quality Tier
+    nether-fortresses: 1     # +1 Quality Tier
+    bastions: 2              # +2 Quality Tiers
+    woodland-mansions: 1     # +1 Quality Tier
+
+  # Boss Drops - Garantierte Bücher
+  boss-drops:
+    ender-dragon:
+      enabled: true
+      book-count: 3-5        # 3-5 Books garantiert
+      min-quality: "MYTHIC"  # Minimum Quality
+    wither:
+      enabled: true
+      book-count: 2-4
+      min-quality: "LEGENDARY"
+    warden:
+      enabled: true
+      book-count: 2-3
+      min-quality: "LEGENDARY"
+
+  # Fishing - Base Chance
+  fishing:
+    base-chance: 0.05        # 5% Base-Chance
+    world-tier-bonus: 0.02   # +2% pro World Tier
+
+  # Enchanting Table - Level-basierte Chancen
+  enchanting-table:
+    level-30-chance: 0.50    # 50% bei Level 30
+    level-20-chance: 0.30    # 30% bei Level 20
+    level-10-chance: 0.15    # 15% bei Level 10
+
+  # Villager Trading - Librarian Level-basierte Chancen
+  villager-trading:
+    master-chance: 0.40      # 40% für Master (Level 5)
+    expert-chance: 0.25      # 25% für Expert (Level 4)
+    journeyman-chance: 0.15  # 15% für Journeyman (Level 3)
+
+# ===================================
 # COMBAT SYSTEM (Vanilla Mechaniken)
 # ===================================
 combat:
